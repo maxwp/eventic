@@ -68,9 +68,11 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
 
                 $this->_buffer .= $line;
 
-                // такая строка — конец блока заголовков
+                // такая строка = конец блока заголовков
                 if ($line == "\r\n" || $line == "\n") {
-                    // разбираем заголовки в ассоц. массив
+                    // разбираем заголовки в assoc массив
+                    // @todo возможно можно сразу накапливать headerArray вместо buffer;
+                    //       то есть если я жду заголовки - то сразу писать их в header и так пока не встречу rn
                     $lineArray = explode("\r\n", $this->_buffer);
 
                     // @todo можно ускорить за счет [...]
