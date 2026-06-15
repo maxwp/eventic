@@ -22,7 +22,7 @@ abstract class StreamLoop_Timer_Abstract extends StreamLoop_Handler_Abstract {
         }
         $this->_timeout = $timeout;
 
-        // @todo how to check id?
+        // @todo how to check id? = registry of SL timers
         $this->streamID = -1 * (int) $timerID; // id нужен отрицательный чтобы не пересекся с настоящими stream
         $this->stream = null;
 
