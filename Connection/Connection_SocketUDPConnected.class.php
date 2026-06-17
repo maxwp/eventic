@@ -13,8 +13,10 @@ class Connection_SocketUDPConnected extends Connection_SocketUDP {
 
     // @todo override read() to socket_recv()
 
-    public function __construct($host, int $port) {
+    public function __construct($host, $port) {
         parent::__construct();
+
+        // @todo verify host & port
         $this->_host = $host;
         $this->_port = $port;
     }
