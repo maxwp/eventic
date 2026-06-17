@@ -37,6 +37,7 @@ abstract class StreamLoop_TCP_Abstract extends StreamLoop_Handler_Abstract {
             $socket->setBufferSizeWrite(2 * 1024 * 1024);
             $socket->setKeepAlive();
             $socket->setQuickACK();
+            $socket->setCORK();
 
             stream_set_blocking($stream, false);
 

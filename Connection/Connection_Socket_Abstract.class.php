@@ -70,6 +70,13 @@ abstract class Connection_Socket_Abstract implements Connection_IConnection {
         socket_set_option($this->_socket, SOL_TCP, 12, $value); // TCP_QUICKACK as 12 defined in php 8.3+ only
     }
 
+    public function setCORK($value = 0) {
+        // TCP_CORK говорит ядру Linux: не отправляй мелкие TCP-пакеты сразу, подожди пока накопится нормальный кусок данных.”
+        // TCP_CORK по умолчанию выключен.
+        // никогда не включается автоматически ядром для обычных приложений
+        socket_set_option($this->_socket, SOL_TCP, 3, $value); // TCP_CORK as 3 defined
+    }
+
     public function setKeepAlive($value = 1) {
         socket_set_option($this->_socket, SOL_SOCKET, SO_KEEPALIVE, $value);
     }
