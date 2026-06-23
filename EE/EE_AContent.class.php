@@ -136,6 +136,18 @@ abstract class EE_AContent implements EE_IContent {
         }
     }
 
+    /**
+     * @param array $a
+     * @return void
+     */
+    public function updateValueArray($a) {
+        $this->_valueArray += $a;
+    }
+
+    public function setValueArray($a) {
+        $this->_valueArray = $a;
+    }
+
     public function unsetValue($key) {
         unset($this->_valueArray[$key]);
     }
