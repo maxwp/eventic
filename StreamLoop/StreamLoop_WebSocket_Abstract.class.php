@@ -56,6 +56,8 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         $this->_buffer = '';
         $this->_bufferLength = 0;
         $this->_bufferOffset = 0;
+        $this->_fragmentOpcode = null;
+        $this->_fragmentPayload = '';
 
         $this->_state = StreamLoop_WebSocket_Const::STATE_DISCONNECTED;
     }
@@ -156,13 +158,48 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                             }
 
                             // обработка опкодов
-                            $opcode = ord($buffer[$offset]) & 0x0F;
-                            if ($opcode <= 0x2) { // // 0x1 (text) или 0x2 (binary)
+                            $firstByte = ord($buffer[$offset]);
+                            $fin = ($firstByte & 0x80) !== 0;
+                            $opcode = $firstByte & 0x0F;
+
+                            if ($opcode == 0x1) {
                                 # debug:start
                                 Cli::Print_n(__CLASS__.': received opcode='.$opcode.' '.$payload);
                                 # debug:end
 
-                                $this->_onReceive($tsSelect, $payload, $opcode);
+                                if ($fin) {
+                                    $this->_onReceive($tsSelect, $payload, $opcode);
+                                } else {
+                                    $this->_fragmentOpcode = $opcode;
+                                    $this->_fragmentPayload = $payload;
+                                }
+                            } elseif ($opcode == 0x2) {
+                                # debug:start
+                                Cli::Print_n(__CLASS__.': received opcode='.$opcode.' '.$payload);
+                                # debug:end
+
+                                if ($fin) {
+                                    $this->_onReceive($tsSelect, $payload, $opcode);
+                                } else {
+                                    $this->_fragmentOpcode = $opcode;
+                                    $this->_fragmentPayload = $payload;
+                                }
+                            } elseif ($opcode == 0x0) { // continuation
+                                # debug:start
+                                Cli::Print_n(__CLASS__.': received opcode='.$opcode.' '.$payload);
+                                # debug:end
+
+                                if ($this->_fragmentOpcode === null) {
+                                    throw new StreamLoop_Exception(StreamLoop_WebSocket_Const::ERROR_UNKNOWN_OPCODE);
+                                }
+
+                                $this->_fragmentPayload .= $payload;
+
+                                if ($fin) {
+                                    $this->_onReceive($tsSelect, $this->_fragmentPayload, $this->_fragmentOpcode);
+                                    $this->_fragmentOpcode = null;
+                                    $this->_fragmentPayload = '';
+                                }
                             } elseif ($opcode == 0xA) { // FRAME PONG
                                 # debug:start
                                 Cli::Print_n(__CLASS__ . ": received frame-pong $payload");
@@ -505,5 +542,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
     private $_readFrameDrain = 1;
     private $_chr126, $_chr127;
     private $_pingPeriod = 0.0; // float
+    private $_fragmentOpcode = null;
+    private $_fragmentPayload = '';
 
 }
