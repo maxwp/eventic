@@ -325,7 +325,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
             $this->_buffer .= $line; // to locals не нужен, меньше 4х использований
             // пустая строка - конец блока заголовков
             if ($line == "\r\n" || $line == "\n") {
-                if (str_contains($this->_buffer, '101 Switching Protocols')) {
+                if (explode(' ', $this->_buffer, 3)[1] == '101') {
                     // вот тут опционально ебашим writeArray если он передан, за один fwrite syscall
                     // @todo write можно вызвать в onReady и тогда его не передавать в SL_WS вообще
                     if ($this->_writeArray) {
