@@ -168,6 +168,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                                 # debug:end
 
                                 if ($fin) {
+                                    $this->_active = true; // спец-костыль: если данные идут - похер на iframe ping-pong
                                     $this->_onReceive($tsSelect, $payload, $opcode);
                                 } else {
                                     $this->_fragmentOpcode = $opcode;
@@ -179,6 +180,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                                 # debug:end
 
                                 if ($fin) {
+                                    $this->_active = true; // спец-костыль: если данные идут - похер на iframe ping-pong
                                     $this->_onReceive($tsSelect, $payload, $opcode);
                                 } else {
                                     $this->_fragmentOpcode = $opcode;
@@ -196,6 +198,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                                 $this->_fragmentPayload .= $payload;
 
                                 if ($fin) {
+                                    $this->_active = true; // спец-костыль: если данные идут - похер на iframe ping-pong
                                     $this->_onReceive($tsSelect, $this->_fragmentPayload, $this->_fragmentOpcode);
                                     $this->_fragmentOpcode = null;
                                     $this->_fragmentPayload = '';
