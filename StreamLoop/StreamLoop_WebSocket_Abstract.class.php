@@ -401,11 +401,15 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
 
     private function _checkEOF($tsSelect) {
         if (feof($this->stream)) {
-            $this->throwError($tsSelect, StreamLoop_WebSocket_Const::ERROR_EOF);
+            $this->throwError(
+                $tsSelect,
+                StreamLoop_WebSocket_Const::ERROR_EOF,
+                socket_strerror(socket_last_error(socket_import_stream($this->stream))),
+            );
             return true;
+        } else {
+            return false;
         }
-
-        return false;
     }
 
     /**
