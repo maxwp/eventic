@@ -404,7 +404,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
             $this->throwError(
                 $tsSelect,
                 StreamLoop_WebSocket_Const::ERROR_EOF,
-                socket_strerror(socket_last_error(socket_import_stream($this->stream))),
+                json_encode(stream_get_meta_data($this->stream)),
             );
             return true;
         } else {
