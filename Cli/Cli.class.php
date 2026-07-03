@@ -120,6 +120,7 @@ class Cli {
     public const FG_RED     = "31";
     public const FG_GREEN   = "32";
     public const FG_YELLOW  = "33";
+    public const FG_ORANGE = "38;5;208";
     public const FG_BLUE    = "34";
     public const FG_MAGENTA = "35";
     public const FG_CYAN    = "36";
@@ -133,6 +134,7 @@ class Cli {
     public const BG_RED     = "41";
     public const BG_GREEN   = "42";
     public const BG_YELLOW  = "43";
+    public const BG_ORANGE = "48;5;208";
     public const BG_BLUE    = "44";
     public const BG_MAGENTA = "45";
     public const BG_CYAN    = "46";
