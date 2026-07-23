@@ -1,9 +1,9 @@
 <?php
 class MA_PrevValue implements MA_Interface {
 
-    public function __construct() {
-        $this->_ma = 1.0;
-        $this->_value = 1.0;
+    public function __construct($initValue) {
+        $this->_ma = $initValue;
+        $this->_value = $initValue;
         $this->_ts = 1.0; // стартовое время далеко в прошлом
     }
 
