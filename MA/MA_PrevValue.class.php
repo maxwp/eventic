@@ -22,12 +22,12 @@ class MA_PrevValue implements MA_Interface {
     }
 
     public function update($ts, $value) {
-        $this->_advance($ts); // дотягиваем ema до этой точки
+        $this->_advance($ts); // дотягиваем до этой точки
         $this->_value = $value;
     }
 
     public function get($ts) {
-        $this->_advance($ts); // дотягиваем  до этой точки
+        $this->_advance($ts); // дотягиваем до этой точки
         return $this->_ma;
     }
 
