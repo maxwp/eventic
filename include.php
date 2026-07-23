@@ -133,6 +133,10 @@ ClassLoader::Get()->registerClassArray([
     __DIR__.'/Array/Array_Object.class.php',
     __DIR__.'/Array/Array_Static.class.php',
 
+    __DIR__.'/MA/MA_Interface.class.php',
+    __DIR__.'/MA/MA_PrevValue.class.php',
+    __DIR__.'/MA/MA_ContinuousEMA.class.php',
+
     __DIR__.'/Cron/Cron.class.php',
     __DIR__.'/Cron/Cron_Clear.class.php',
 
