@@ -17,7 +17,7 @@ class DateTime_Object {
 
     public function __construct($timestamp) {
         $this->_timestamp = $timestamp;
-        $this->_classformat = new DateTime_ClassFormatDefault();
+        $this->_classFormat = new DateTime_ClassFormatDefault();
     }
 
     /**
@@ -30,11 +30,11 @@ class DateTime_Object {
     }
 
     /**
-     * @param DateTime_IClassFormat $classformat
+     * @param DateTime_IClassFormat $classFormat
      * @return DateTime_Object
      */
-    public function setClassFormat(DateTime_IClassFormat $classformat) {
-        $this->_classformat = $classformat;
+    public function setClassFormat(DateTime_IClassFormat $classFormat) {
+        $this->_classFormat = $classFormat;
         return $this;
     }
 
@@ -42,7 +42,7 @@ class DateTime_Object {
      * @return string
      */
     public function __toString() {
-        $cf = $this->_classformat;
+        $cf = $this->_classFormat;
         $cf->setDate($this->_timestamp);
         $cf->setFormat($this->_format);
         return $cf->__toString();
@@ -55,21 +55,21 @@ class DateTime_Object {
     /**
      * Добавить месяц
      *
-     * @param int $number_of_month
+     * @param int $months
      * @return DateTime_Object
      */
-    public function addMonth($number_of_month) {
-        return $this->addSomething('mon', $number_of_month);
+    public function addMonth($months) {
+        return $this->_addSomething('mon', $months);
     }
 
     /**
      * Добавить день
      *
-     * @param int $number_of_day
+     * @param int $days
      * @return DateTime_Object
      */
-    public function addDay($number_of_day) {
-        return $this->addSomething('mday', $number_of_day);
+    public function addDay($days) {
+        return $this->_addSomething('mday', $days);
     }
 
     /**
@@ -79,7 +79,7 @@ class DateTime_Object {
      * @return DateTime_Object
      */
     public function addMinute($minutes) {
-        return $this->addSomething('minutes', $minutes);
+        return $this->_addSomething('minutes', $minutes);
     }
 
     /**
@@ -89,7 +89,7 @@ class DateTime_Object {
      * @return DateTime_Object
      */
     public function addHour($hours) {
-        return $this->addSomething('hours', $hours);
+        return $this->_addSomething('hours', $hours);
     }
 
     /**
@@ -99,17 +99,17 @@ class DateTime_Object {
      * @return DateTime_Object
      */
     public function addSecond($seconds) {
-        return $this->addSomething('seconds', $seconds);
+        return $this->_addSomething('seconds', $seconds);
     }
 
     /**
      * Добавить год
      *
-     * @param int $number_of_year
+     * @param int $years
      * @return DateTime_Object
      */
-    public function addYear($number_of_year) {
-        return $this->addSomething('year', $number_of_year);
+    public function addYear($years) {
+        return $this->_addSomething('year', $years);
     }
 
     /**
@@ -128,7 +128,8 @@ class DateTime_Object {
      * @param int $count
      * @return DateTime_Object
      */
-    public function addSomething($what = 'mday', $count) {
+    private function _addSomething($what, $count) {
+        // @todo говнище ж лютое
         $array = getdate($this->_timestamp);
         $array[$what] += $count;
         $this->_timestamp = mktime($array['hours'],$array['minutes'],$array['seconds'], $array['mon'],$array['mday'],$array['year']);
@@ -190,13 +191,13 @@ class DateTime_Object {
         return new DateTime_Object(strtotime($strtime));
     }
 
-    private $_timestamp;
+    private $_timestamp; // float
 
-    private $_format = 'Y-m-d H:i:s';
+    private $_format = 'Y-m-d H:i:s'; // @todo лучше все на class formatters
 
     /**
      * @var DateTime_IClassFormat
      */
-    private $_classformat;
+    private $_classFormat;
 
 }
