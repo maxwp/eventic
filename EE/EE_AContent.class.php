@@ -96,6 +96,8 @@ abstract class EE_AContent implements EE_IContent {
         return $this->_argumentArray;
     }
 
+    // @todo setArgumentArray
+
     /**
      * Задать внутренних аргумент контенту
      *
