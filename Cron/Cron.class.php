@@ -68,26 +68,29 @@ class Cron extends Pattern_ASingleton {
         }
     }
 
+    // @todo универсальный метод построения команды в Cli::
     private function _makeCommand($data) {
         $className = $data['classname'];
         $argumentArray = $data['argumentArray'];
 
         if ($argumentArray) {
             ksort($argumentArray);
-        }
 
-        $a = [];
-        foreach ($argumentArray as $key => $value) {
-            if (is_array($value)) {
-                $a[] = $key.'=['.implode(',', $value).']';
-            } elseif ($value === true) {
-                $a[] = $key;
-            } else {
-                $a[] = "$key=$value";
+            $a = [];
+            foreach ($argumentArray as $key => $value) {
+                if (is_array($value)) {
+                    $a[] = $key . '=[' . implode(',', $value) . ']';
+                } elseif ($value === true) {
+                    $a[] = $key;
+                } else {
+                    $a[] = "$key=$value";
+                }
             }
+            $argumentString = implode(' ', $a);
+            unset($a);
+        } else {
+            $argumentString = '';
         }
-        $argumentString = implode(' ', $a);
-        unset($a);
 
         return "ee-run.php $className $argumentString";
     }
