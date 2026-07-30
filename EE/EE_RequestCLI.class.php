@@ -11,12 +11,40 @@
  */
 class EE_RequestCLI implements EE_IRequest {
 
+    // @todo отказаться от говна с одинаковыми аргументами, лучше явно массивы
+    // @todo отказаться о -- prefix
+    // @todo общий код с getArgument? или вписать все через init getArgumments?
+
     public function getArgumentArray() {
         global $argv;
 
-        // @todo надо красиво перебрать все CLI-аргументы
+        $argumentArray = [];
 
-        return $argv;
+        if (!empty($argv[1])) {
+            $argumentArray['ee'] = $argv[1];
+        }
+
+        // косим нулевой и первый элементы - там тупо ee-run.php и имя класса,
+        // причем они закосятся глобально и в следующем запуске не будет даже ee
+        // @todo разобраться нужно ли так
+        unset($argv[0], $argv[1]);
+
+        foreach ($argv as $arg) {
+            if ($arg) {
+                $arg = preg_replace('/^--/', '', $arg);
+
+                if (preg_match("/^(.+?)=\[(.+?)\]$/ius", $arg, $r)) {
+                    $argumentArray[$r[1]] = explode(',', $r[2]);
+                } elseif (preg_match("/^(.+?)=(.+?)$/ius", $arg, $r)) {
+                    $argumentArray[$r[1]] = $r[2];
+                } else {
+                    // похоже на bool
+                    $argumentArray[$arg] = true;
+                }
+            }
+        }
+
+        return $argumentArray;
     }
 
     public function getArgument($key, $source = false) {

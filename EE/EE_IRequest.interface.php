@@ -11,15 +11,10 @@
  */
 interface EE_IRequest {
 
-    // @todo шо тут делать?
-    //public function getURL();
-    //public function getHost();
-    //public function getCOOKIEArray();
+    // @todo типы source наверное относятся к особенностям Request?
 
     public function getArgumentArray();
-
     public function getArgument($key, $source = false);
-
     public const ARG_SOURCE_FILE = 'file';
     public const ARG_SOURCE_GET = 'get';
     public const ARG_SOURCE_POST = 'post';
