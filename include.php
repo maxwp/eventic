@@ -174,7 +174,7 @@ ClassLoader::Get()->registerClassArray([
     __DIR__.'/Benchmark/Benchmark_json.class.php',
     __DIR__.'/Benchmark/Benchmark_math.class.php',
     __DIR__.'/Benchmark/Benchmark_microtime.class.php',
-    __DIR__.'/Benchmark/Benchmark_random.class.php',
+    __DIR__.'/Benchmark/Benchmark_rand.class.php',
     __DIR__.'/Benchmark/Benchmark_socket.class.php',
     __DIR__.'/Benchmark/Benchmark_socket_reader.class.php',
 
