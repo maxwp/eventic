@@ -9,6 +9,8 @@ class Benchmark extends EE_AContentCli {
         }
         $simulateCold = $this->getArgumentSecure('cold', EE_Typing::TYPE_INT);
 
+        $this->print_title("Benchmark $className");
+
         $stub = new Benchmark_Stub();
 
         // сначала меряем пустой вызов и цикл
