@@ -91,7 +91,6 @@ class Benchmark extends EE_AContentCli {
         $this->print_n("hot  med = ".round(Array_Static::Med($tHotAvg))." ns/call");
         $this->print_n("hot  p95 = ".round(Array_Static::Quantile($tHotAvg, 95))." ns/call");
         $this->print_n("hot  p99 = ".round(Array_Static::Quantile($tHotAvg, 99))." ns/call");
-        $this->print_n("hot  var = ".(Array_Static::Variance($tHotAvg)));
 
         $this->print_n();
 
@@ -100,7 +99,6 @@ class Benchmark extends EE_AContentCli {
             $this->print_n("cold med = " . round(Array_Static::Med($tColdAvg)) . " ns/call");
             $this->print_n("cold p95 = " . round(Array_Static::Quantile($tColdAvg, 95)) . " ns/call");
             $this->print_n("cold p99 = " . round(Array_Static::Quantile($tColdAvg, 99)) . " ns/call");
-            $this->print_n("cold var = " . (Array_Static::Variance($tColdAvg)));
         }
     }
 

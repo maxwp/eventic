@@ -177,6 +177,7 @@ ClassLoader::Get()->registerClassArray([
     __DIR__.'/Benchmark/Benchmark_rand.class.php',
     __DIR__.'/Benchmark/Benchmark_socket.class.php',
     __DIR__.'/Benchmark/Benchmark_socket_reader.class.php',
+    __DIR__.'/Benchmark/Benchmark_All.class.php',
 
     __DIR__.'/ImageProcessor/ImageProcessor.class.php',
     __DIR__.'/ImageProcessor/ImageProcessor_Action.class.php',
