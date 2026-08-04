@@ -292,25 +292,30 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
     public function readyWrite($tsSelect) {
         switch ($this->_state) {
             case StreamLoop_WebSocket_Const::STATE_CONNECTING:
-                // коннект установился, я готов к записи
-                $host = $this->getDestinationHost(); // to locals: 2+
-                stream_context_set_option($this->stream, [
-                    'ssl' => [
-                        'SNI_enabled' => true,
-                        'SNI_server_name' => $host,
-                        'verify_peer' => false,
-                        'verify_peer_name' => false,
-                        'peer_name' => $host, // так надо делать если я перебираю IPшники хоста
-                        'allow_self_signed' => true,
-                    ],
-                ]);
+                if ($this->_crypto) {
+                    // коннект установился, я готов к записи
+                    $host = $this->getDestinationHost(); // to locals: 2+
+                    stream_context_set_option($this->stream, [
+                        'ssl' => [
+                            'SNI_enabled' => true,
+                            'SNI_server_name' => $host,
+                            'verify_peer' => false,
+                            'verify_peer_name' => false,
+                            'peer_name' => $host, // так надо делать если я перебираю IPшники хоста
+                            'allow_self_signed' => true,
+                        ],
+                    ]);
 
-                $this->_state = StreamLoop_WebSocket_Const::STATE_HANDSHAKING;
+                    $this->_state = StreamLoop_WebSocket_Const::STATE_HANDSHAKING;
 
-                // NB! НЕ ставим write, потому что во время handshaking всегда идет write и просто зайобка CPU, я проверял
-                $this->_loop->updateHandlerFlags($this, true, false); // connecting done -> handshaking
+                    // NB! НЕ ставим write, потому что во время handshaking всегда идет write и просто зайобка CPU, я проверял
+                    $this->_loop->updateHandlerFlags($this, true, false); // connecting done -> handshaking
 
-                $this->_processHandshake($tsSelect);
+                    $this->_processHandshake($tsSelect);
+                } else {
+                    // Обычный ws:// — TLS-handshake не нужен
+                    $this->_startUpgrade($tsSelect);
+                }
                 return;
             case StreamLoop_WebSocket_Const::STATE_HANDSHAKING:
                 $this->_processHandshake($tsSelect);
@@ -438,23 +443,24 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
 
         // тут нужны ===, потому что если вернется int 0 - то надо пробовать еще раз
         if ($return === true) {
-            // ssl handshake успешен -> делаем websocket upgrade
-            fwrite(
-                $this->stream,
-                "GET {$this->_path} HTTP/1.1\r\nHost: ".$this->getDestinationHost()."\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: ".base64_encode(random_bytes(16))."\r\nSec-WebSocket-Version: 13\r\n"
-                . ($this->_headerArray ? implode("\r\n", $this->_headerArray)."\r\n" : '')
-                . "\r\n"
-            );
-
-            $this->_state = StreamLoop_WebSocket_Const::STATE_UPGRADING;
-            $this->_loop->updateHandlerFlags($this, true, false); // handshaking done -> upgrading
-
-            $this->_checkUpgrade($tsSelect);
-
+            $this->_startUpgrade($tsSelect);
         } elseif ($return === false) {
             $this->throwError($tsSelect, StreamLoop_WebSocket_Const::ERROR_HANDSHAKE);
-            return;
         }
+    }
+
+    private function _startUpgrade($tsSelect) {
+        fwrite(
+            $this->stream,
+            "GET {$this->_path} HTTP/1.1\r\nHost: ".$this->getDestinationHost()."\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: ".base64_encode(random_bytes(16))."\r\nSec-WebSocket-Version: 13\r\n"
+            . ($this->_headerArray ? implode("\r\n", $this->_headerArray)."\r\n" : '')
+            . "\r\n"
+        );
+
+        $this->_state = StreamLoop_WebSocket_Const::STATE_UPGRADING;
+        $this->_loop->updateHandlerFlags($this, true, false); // handshaking done -> upgrading
+
+        $this->_checkUpgrade($tsSelect);
     }
 
     public function write($data, $opcode = 1) {

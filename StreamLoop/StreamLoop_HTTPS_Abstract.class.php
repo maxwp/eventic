@@ -10,6 +10,7 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
         if ($this->_state == StreamLoop_HTTPS_Const::STATE_READY) {
             $request = $method . ' ' . $path . " HTTP/1.1\r\nHost: ".$this->getDestinationHost()."\r\nConnection: keep-alive\r\n" . implode("\r\n", $headerArray)."\r\n";
 
+            // @todo упростить
             if ($body != '') { // чаще body есть
                 $request .= 'Content-Length: ' . strlen($body) . "\r\n\r\n" . $body;
             } else {
@@ -42,6 +43,14 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
 
         // state меняем ТОЛЬКО createAndConnect, потому что он может выкинуть exeption и мне нельзя остаться в state connecting
         $this->_state = StreamLoop_HTTPS_Const::STATE_CONNECTING; // in 1st connect
+    }
+
+    private function _completeConnect($tsSelect) {
+        // Переводим соединение в READY и снимаем служебные
+        // флаги/таймаут подключения
+        $this->_reset();
+
+        $this->_onReady($tsSelect);
     }
 
     public function disconnect() {
@@ -278,26 +287,32 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
     public function readyWrite($tsSelect) {
         // if-tree optimization
         if ($this->_state == StreamLoop_HTTPS_Const::STATE_CONNECTING) {
+            // TCP-соединение установлено
             // коннект установился, я готов к записи
-            $host = $this->getDestinationHost(); // to locals: 2+
-            stream_context_set_option($this->stream, [
-                'ssl' => [
-                    'SNI_enabled' => true,
-                    'SNI_server_name' => $host,
-                    'verify_peer' => false,
-                    'verify_peer_name' => false,
-                    'peer_name' => $host,
-                    'allow_self_signed' => true,
-                ],
-            ]);
+            if ($this->_crypto) {
+                $host = $this->getDestinationHost(); // to locals: 2+
+                stream_context_set_option($this->stream, [
+                    'ssl' => [
+                        'SNI_enabled' => true,
+                        'SNI_server_name' => $host,
+                        'verify_peer' => false,
+                        'verify_peer_name' => false,
+                        'peer_name' => $host,
+                        'allow_self_signed' => true,
+                    ],
+                ]);
 
-            $this->_state = StreamLoop_HTTPS_Const::STATE_HANDSHAKING; // handshake starting
+                $this->_state = StreamLoop_HTTPS_Const::STATE_HANDSHAKING; // handshake starting
 
-            // NB! НЕ ставим write, потому что во время handshaking всегда идет write и просто зайобка
-            $this->_loop->updateHandlerFlags($this, true, false); // connected done -> waiting for SSL handshake
+                // NB! НЕ ставим write, потому что во время handshaking всегда идет write и просто зайобка
+                $this->_loop->updateHandlerFlags($this, true, false); // connected done -> waiting for SSL handshake
 
-            // и сразу же проверяем его, вдруг подключился
-            $this->_processHandshake($tsSelect);
+                // и сразу же проверяем его, вдруг подключился
+                $this->_processHandshake($tsSelect);
+            } else {
+                // HTTP без TLS: после TCP-connect сразу готовы
+                $this->_completeConnect($tsSelect);
+            }
         } elseif ($this->_state == StreamLoop_HTTPS_Const::STATE_HANDSHAKING) {
             $this->_processHandshake($tsSelect);
         }
@@ -352,11 +367,9 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
         );
 
         if ($return === true) {
-            // я подключился
-            $this->_reset(); // reset in handshake
-
-            // готов + бросам событие что я готов
-            $this->_onReady($tsSelect);
+            $this->_completeConnect($tsSelect);
+            
+            return;
         } elseif ($return === false) {
             $this->throwError( // handshake
                 $tsSelect,
@@ -367,6 +380,8 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
             return; // чтобы не лупиться в eof
         }
 
+        // $return === 0:
+        // TLS-handshake пока не завершён
         $this->_checkEOF(); // in _processHandshake
     }
 

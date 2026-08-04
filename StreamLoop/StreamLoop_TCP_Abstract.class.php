@@ -5,7 +5,7 @@ abstract class StreamLoop_TCP_Abstract extends StreamLoop_Handler_Abstract {
 
     protected function _createAndConnectTCP() {
         # debug:start
-        Cli::Print_n(__CLASS__." connecting to {$this->_destinationHost} ip={$this->_destinationIP} port={$this->_destinationPort} bind={$this->_sourceIP}:{$this->_sourcePort}");
+        Cli::Print_n(__CLASS__." connecting to {$this->_destinationHost} ip={$this->_destinationIP} port={$this->_destinationPort} bind={$this->_sourceIP}:{$this->_sourcePort} crypto={$this->_crypto}");
         # debug:end
 
         $stream = stream_socket_client(
@@ -50,12 +50,13 @@ abstract class StreamLoop_TCP_Abstract extends StreamLoop_Handler_Abstract {
         }
     }
 
-    protected function _updateDestination($host, $port, $ip = false) {
+    protected function _updateDestination($host, $port, $ip = false, $crypto = true) {
         if (Validator::CheckHost($host)) {
             if (Validator::CheckPort($port)) {
                 $this->_destinationHost = $host;
                 $this->_destinationPort = $port;
                 $this->_destinationIP = $ip; // @todo ip пока не проверяется
+                $this->_crypto = $crypto;
 
                 return;
             }
@@ -146,5 +147,6 @@ abstract class StreamLoop_TCP_Abstract extends StreamLoop_Handler_Abstract {
     private $_destinationIP = false; // string
     private $_sourceIP = '0.0.0.0'; // string, any ip by default
     private $_sourcePort = 0; // int, any port by default
+    protected $_crypto = true; // bool
 
 }
