@@ -158,7 +158,7 @@ ClassLoader::Get()->registerClassArray([
     __DIR__.'/StreamLoop/StreamLoop_Exception.class.php',
     __DIR__.'/StreamLoop/StreamLoop_Handler_Abstract.class.php',
     __DIR__.'/StreamLoop/StreamLoop_TCP_Abstract.class.php',
-    __DIR__.'/StreamLoop/StreamLoop_HTTPS_Abstract.class.php',
+    __DIR__.'/StreamLoop/StreamLoop_HTTP_Abstract.class.php',
     __DIR__.'/StreamLoop/StreamLoop_UDP_Abstract.class.php',
     __DIR__.'/StreamLoop/StreamLoop_UDP_Drain_Abstract.class.php',
     __DIR__.'/StreamLoop/StreamLoop_UDP_DrainForward_Abstract.class.php',
@@ -229,7 +229,7 @@ ClassLoader::Get()->registerClass(__DIR__.'/MailQue/MailQue_Exception.class.php'
 include(__DIR__.'/Smarty/2.6.26-optimized/Smarty.class.php');
 include(__DIR__.'/Smarty/Smarty_FileFetch.class.php');
 
-include __DIR__.'/StreamLoop/StreamLoop_HTTPS_Const.class.php';
+include __DIR__.'/StreamLoop/StreamLoop_HTTP_Const.class.php';
 include __DIR__.'/StreamLoop/StreamLoop_WebSocket_Const.class.php';
 
 include_once __DIR__.'/StringUtils/StringUtils_FormatterPrice.class.php'; // no autoload for static classes, performance

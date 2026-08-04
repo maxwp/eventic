@@ -1,5 +1,5 @@
 <?php
-abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
+abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
 
     abstract protected function _beforeConnect();
     abstract protected function _onReceive($tsSelect, $statusCode, $statusMessage, $headerArray, $body);
@@ -7,7 +7,7 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
     abstract protected function _onReady($tsSelect); // @todo переделать на FSM Events?
 
     public function write($method, $path, $body, $headerArray, $timeoutTo) {
-        if ($this->_state == StreamLoop_HTTPS_Const::STATE_READY) {
+        if ($this->_state == StreamLoop_HTTP_Const::STATE_READY) {
             $request = $method . ' ' . $path . " HTTP/1.1\r\nHost: ".$this->getDestinationHost()."\r\nConnection: keep-alive\r\n" . implode("\r\n", $headerArray)."\r\n";
 
             // @todo упростить
@@ -19,14 +19,14 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
 
             if (fwrite($this->stream, $request)) { // это не совсем верная проверка, но для коротких payload пойдет
                 // timeout на запрос есть всегда, по дефолту это 10 сек (см код выше)
-                $this->_state = StreamLoop_HTTPS_Const::STATE_WAIT_FOR_RESPONSE_HEADERS; // new request sent
+                $this->_state = StreamLoop_HTTP_Const::STATE_WAIT_FOR_RESPONSE_HEADERS; // new request sent
 
                 $this->_loop->updateHandlerFlags($this, true, false); // request sent -> waiting for headers
                 $this->_loop->updateStreamTimeout($this->streamID, $timeoutTo); // request sent -> waiting for headers
             } else {
                 $this->throwError( // closed by server / reset by peer
                     microtime(true), // tsSelect
-                    StreamLoop_HTTPS_Const::ERROR_CLOSED_BY_SERVER, // http code 0
+                    StreamLoop_HTTP_Const::ERROR_CLOSED_BY_SERVER, // http code 0
                     'Connection closed by server', // ясное сообщение
                 );
             }
@@ -42,7 +42,7 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
         $this->_createAndConnectTCP();
 
         // state меняем ТОЛЬКО createAndConnect, потому что он может выкинуть exeption и мне нельзя остаться в state connecting
-        $this->_state = StreamLoop_HTTPS_Const::STATE_CONNECTING; // in 1st connect
+        $this->_state = StreamLoop_HTTP_Const::STATE_CONNECTING; // in 1st connect
     }
 
     private function _completeConnect($tsSelect) {
@@ -56,7 +56,7 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
     public function disconnect() {
         if ($this->streamID) { // этот if - защита от double disconnect: вдруг сработает read, а потом write и в нем я disconnected
             // reset сам сделает updateHandler в ноль
-            $this->_reset(StreamLoop_HTTPS_Const::STATE_DISCONNECTED); // reset in disconnect
+            $this->_reset(StreamLoop_HTTP_Const::STATE_DISCONNECTED); // reset in disconnect
             $this->_loop->unregisterHandler($this); // важно: disconnect снимает регистрацию handler'a
         }
 
@@ -70,7 +70,7 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
 
     public function readyRead($tsSelect) {
         // if-tree optimization
-        if ($this->_state == StreamLoop_HTTPS_Const::STATE_WAIT_FOR_RESPONSE_HEADERS) {
+        if ($this->_state == StreamLoop_HTTP_Const::STATE_WAIT_FOR_RESPONSE_HEADERS) {
             // drain read headers
             do {
                 $line = fgets($this->stream, 4096); // я читаю через fgetS и врядли будет строка больше 4Kb
@@ -105,7 +105,7 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
                         }
                     }
 
-                    $this->_state = StreamLoop_HTTPS_Const::STATE_WAIT_FOR_RESPONSE_BODY; // headers readed -> waiting for body
+                    $this->_state = StreamLoop_HTTP_Const::STATE_WAIT_FOR_RESPONSE_BODY; // headers readed -> waiting for body
 
                     $this->_buffer = '';
 
@@ -117,7 +117,7 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
                     break; // break цикла
                 }
             } while (true);
-        } elseif ($this->_state == StreamLoop_HTTPS_Const::STATE_WAIT_FOR_RESPONSE_BODY) {
+        } elseif ($this->_state == StreamLoop_HTTP_Const::STATE_WAIT_FOR_RESPONSE_BODY) {
             // @todo как смержить wait for headers & body в кучу? Все равно у меня http 1.1
             $headerArray = $this->_headerArray; // @todo
 
@@ -279,14 +279,14 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
             } else {
                 throw new StreamLoop_Exception('Unsupported encoding');
             }
-        } elseif ($this->_state == StreamLoop_HTTPS_Const::STATE_HANDSHAKING) {
+        } elseif ($this->_state == StreamLoop_HTTP_Const::STATE_HANDSHAKING) {
             $this->_processHandshake($tsSelect);
         }
     }
 
     public function readyWrite($tsSelect) {
         // if-tree optimization
-        if ($this->_state == StreamLoop_HTTPS_Const::STATE_CONNECTING) {
+        if ($this->_state == StreamLoop_HTTP_Const::STATE_CONNECTING) {
             // TCP-соединение установлено
             // коннект установился, я готов к записи
             if ($this->_crypto) {
@@ -302,7 +302,7 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
                     ],
                 ]);
 
-                $this->_state = StreamLoop_HTTPS_Const::STATE_HANDSHAKING; // handshake starting
+                $this->_state = StreamLoop_HTTP_Const::STATE_HANDSHAKING; // handshake starting
 
                 // NB! НЕ ставим write, потому что во время handshaking всегда идет write и просто зайобка
                 $this->_loop->updateHandlerFlags($this, true, false); // connected done -> waiting for SSL handshake
@@ -313,7 +313,7 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
                 // HTTP без TLS: после TCP-connect сразу готовы
                 $this->_completeConnect($tsSelect);
             }
-        } elseif ($this->_state == StreamLoop_HTTPS_Const::STATE_HANDSHAKING) {
+        } elseif ($this->_state == StreamLoop_HTTP_Const::STATE_HANDSHAKING) {
             $this->_processHandshake($tsSelect);
         }
     }
@@ -327,7 +327,7 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
 
         $this->throwError( // timeout 408
             $tsSelect,
-            StreamLoop_HTTPS_Const::ERROR_TIMEOUT,
+            StreamLoop_HTTP_Const::ERROR_TIMEOUT,
         );
     }
 
@@ -349,7 +349,7 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
             // затем кидаем ошибку
             $this->throwError( // EOF
                 microtime(true),
-                StreamLoop_HTTPS_Const::ERROR_EOF, // http code 0
+                StreamLoop_HTTP_Const::ERROR_EOF, // http code 0
                 'Connection closed by server', // ясное сообщение
             );
 
@@ -368,12 +368,12 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
 
         if ($return === true) {
             $this->_completeConnect($tsSelect);
-            
+
             return;
         } elseif ($return === false) {
             $this->throwError( // handshake
                 $tsSelect,
-                StreamLoop_HTTPS_Const::ERROR_HANDSHAKE,
+                StreamLoop_HTTP_Const::ERROR_HANDSHAKE,
                 'Failed to setup SSL'
             );
 
@@ -385,7 +385,7 @@ abstract class StreamLoop_HTTPS_Abstract extends StreamLoop_TCP_Abstract {
         $this->_checkEOF(); // in _processHandshake
     }
 
-    private function _reset($state = StreamLoop_HTTPS_Const::STATE_READY) {
+    private function _reset($state = StreamLoop_HTTP_Const::STATE_READY) {
         // чистка всего перед новым запросом или отключением
         $this->_buffer = '';
         $this->_statusCode = 0;

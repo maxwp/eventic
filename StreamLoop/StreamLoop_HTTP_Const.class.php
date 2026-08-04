@@ -1,5 +1,5 @@
 <?php
-final class StreamLoop_HTTPS_Const {
+final class StreamLoop_HTTP_Const {
 
     // states
     public const STATE_DISCONNECTED = 0;
