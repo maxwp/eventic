@@ -38,7 +38,7 @@ class TelegramAPI {
     private function _request($method, $paramArray = []) {
         curl_setopt($this->_ch, CURLOPT_URL, 'https://api.telegram.org/bot'.$this->_token.'/'.$method);
         curl_setopt($this->_ch, CURLOPT_POST, true);
-        curl_setopt($this->_ch, CURLOPT_POSTFIELDS, http_build_query($paramArray));
+        curl_setopt($this->_ch, CURLOPT_POSTFIELDS, $paramArray);
 
         $response = curl_exec($this->_ch);
 
