@@ -1,2 +1,0 @@
-# eventic
-*	*	*	*	*	/usr/bin/flock -n /var/www/maxhvosting/www/site.hvosting.ua/pid/eew.pid /usr/bin/php -f /var/www/maxhvosting/www/site.hvosting.ua/package/Eventic/ee-worker.php 5 2>&1

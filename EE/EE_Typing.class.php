@@ -18,6 +18,7 @@ class EE_Typing {
      * @param string $typing
      *
      * @return mixed
+     * @throws EE_Exception
      */
     public static function TypeString($value, $typing) {
         $typing = strtolower($typing);
