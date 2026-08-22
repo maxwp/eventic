@@ -206,6 +206,10 @@ ClassLoader::Get()->registerClassArray([
 
     __DIR__.'/TelegramAPI/TelegramAPI.class.php',
 
+    __DIR__.'/SuperVisor/SuperVisor.class.php',
+    __DIR__.'/SuperVisor/SuperRun.class.php',
+    __DIR__.'/SuperVisor/SuperDebug.class.php',
+
     __DIR__.'/Cmd/Cmd.class.php',
     __DIR__.'/Cmd/Cmd_Sender.class.php',
     __DIR__.'/Cmd/Cmd_Receiver.class.php',
