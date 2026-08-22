@@ -12,7 +12,8 @@
 class Cron extends Pattern_ASingleton {
 
     public function add($className, $argumentArray = [], $uniquePID = false, $logFile = false) {
-        if (!is_subclass_of($className, EE_AContent_Interface::class)) {
+        // @todo main-style
+        if (!is_subclass_of($className, EE_Content_Abstract::class)) {
             throw new Exception("Class $className does not extend EE_AContent");
         }
 

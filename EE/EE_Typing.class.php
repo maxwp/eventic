@@ -11,18 +11,20 @@
  */
 class EE_Typing {
 
+    // @todo pkg
+
     /**
-     * Привести строку к необходимому типу
+     * Привести значение к необходимому типу
      *
      * @param mixed $value
-     * @param string $typing
+     * @param string $type
      *
      * @return mixed
      * @throws EE_Exception
      */
-    public static function TypeString($value, $typing) {
-        $typing = strtolower($typing);
-        switch ($typing) {
+    public static function TypeValue($value, $type) {
+        $type = strtolower($type);
+        switch ($type) {
             case self::TYPE_STRING:
                 return (string) $value;
             case self::TYPE_INT:
@@ -69,7 +71,7 @@ class EE_Typing {
                     return date('Y-m-d H:i:s', $x);
                 }
             default:
-                throw new EE_Exception('Unknown typing');
+                throw new EE_Exception('Unknown typing '.$type);
         }
     }
 

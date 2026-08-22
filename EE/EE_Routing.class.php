@@ -9,7 +9,7 @@
 /**
  * Routing
  */
-class EE_Routing implements EE_IRouting {
+class EE_Routing implements EE_Routing_Interface {
 
     /**
      * На основе запроса выдать имя класса, который надо запустить

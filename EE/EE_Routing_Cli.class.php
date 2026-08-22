@@ -6,19 +6,10 @@
  * @author Maxim Miroshnichenko <max@miroshnichenko.org>
  */
 
-/**
- * Routing for CLI
- */
-class EE_Routing_Cli implements EE_IRouting {
+class EE_Routing_Cli implements EE_Routing_Interface {
 
     public function matchContent(EE_Request_Interface $request) {
-        $a = $request->getArgumentArray();
-
-        if (isset($a['ee'])) {
-            return $a['ee'];
-        } else {
-            throw new EE_Exception("No class argv[1]");
-        }
+        return $request->getArgument('ee', EE_Typing::TYPE_STRING);
     }
 
 }

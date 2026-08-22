@@ -9,9 +9,9 @@
 /**
  * Routing interface
  */
-interface EE_IRouting {
+interface EE_Routing_Interface {
 
-    // по IRequest мы определяем имя IProcessable-класса (контента), с которого будет запуск движка
+    // по Request_Interface мы определяем имя класса (контента), с которого будет запуск движка
     public function matchContent(EE_Request_Interface $request);
 
 }

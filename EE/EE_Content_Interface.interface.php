@@ -11,16 +11,12 @@
  */
 interface EE_Content_Interface {
 
-    public function process();
-
-    public function render();
-
-    public function getValue($key);
-
-    public function setValue($key, $value);
-
-    public function getValueArray();
-
-    public function reset();
+    /**
+     * Метод вернет результат (main returns)
+     *
+     * @param EE_Request_Interface $request
+     * @return mixed
+     */
+    public function main(EE_Request_Interface $request);
 
 }
