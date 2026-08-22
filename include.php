@@ -205,6 +205,11 @@ ClassLoader::Get()->registerClassArray([
     __DIR__.'/ImageProcessor/ImageProcessor_ActionWatermarkPNG.class.php',
 
     __DIR__.'/TelegramAPI/TelegramAPI.class.php',
+
+    __DIR__.'/Cmd/Cmd.class.php',
+    __DIR__.'/Cmd/Cmd_Sender.class.php',
+    __DIR__.'/Cmd/Cmd_Receiver.class.php',
+    __DIR__.'/Cmd/Cmd_Interface.interface.php',
 ]);
 
 // default contents

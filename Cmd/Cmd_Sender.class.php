@@ -1,0 +1,52 @@
+<?php
+class Cmd_Sender extends Pattern_ASingleton {
+
+    // @todo сократить cmd & data до 0/1
+    // @todo deflate
+
+    public function sendCommand($serverIP, $cmdClass, $data) {
+        $message = json_encode([
+            'cmd' => $cmdClass,
+            'data' => $data,
+        ]);
+
+        $length = strlen($message);
+        if ($length > Cmd::CMD_MAX_LENGTH) {
+            throw new Exception('UDP-message too long');
+        }
+
+        $result = $this->_socketUDP->writeTo(
+            $message,
+            $length,
+            $serverIP,
+            Cmd::CMD_PORT
+        );
+
+        # debug:start
+        Cli::Print_n("cmd $cmdClass to $serverIP result=$result");
+        # debug:end
+    }
+
+    public function sendCommandSupervisor($serverIP, $superID, $superClass, $argumentArray = [], $configArray = [], $ttl = 300) {
+        $this->sendCommand( // supervisor
+            $serverIP,
+            Cmd_SuperVisor::class, // @todo
+            [
+                'id' => $superID,
+                'cn' => $superClass,
+                'aa' => $argumentArray,
+                'ca' => $configArray,
+                'ttl' => $ttl,
+            ],
+        );
+    }
+
+    public function __construct() {
+        $this->_socketUDP = new Connection_SocketUDP();
+        $this->_socketUDP->setBufferSizeWrite(5 * 1024 * 1024);
+        $this->_socketUDP->setNonBlocking();
+    }
+
+    public Connection_SocketUDP $_socketUDP;
+
+}
