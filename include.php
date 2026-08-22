@@ -79,7 +79,6 @@ ClassLoader::Get()->registerClassArray([
     __DIR__.'/EE/EE_Typing.class.php',
     __DIR__.'/EE/EE.class.php',
     __DIR__.'/EE/EE_Call.class.php',
-    //__DIR__.'/EE/EE_Smarty.class.php',
     __DIR__.'/EE/EE_IRequest.interface.php',
     __DIR__.'/EE/EE_IResponse.interface.php',
     __DIR__.'/EE/EE_IContent.interface.php',
@@ -89,7 +88,6 @@ ClassLoader::Get()->registerClassArray([
     __DIR__.'/EE/EE_RoutingCLI.class.php',
     __DIR__.'/EE/EE_AContent.class.php',
     __DIR__.'/EE/EE_AContentCli.class.php',
-    //__DIR__.'/EE/EE_AContentSmarty.class.php',
 
     __DIR__.'/Cli/Cli.class.php',
 
@@ -229,10 +227,6 @@ ClassLoader::Get()->registerClass(__DIR__.'/MailQue/MailQue_Exception.class.php'
 //ClassLoader::Get()->registerClass(__DIR__.'/SQLBuilder/SQLBuilder_String.class.php');
 //ClassLoader::Get()->registerClass(__DIR__.'/SQLBuilder/SQLBuilder_AQuery.class.php');
 //ClassLoader::Get()->registerClass(__DIR__.'/SQLBuilder/SQLBuilder_Select.class.php');
-
-// @todo перенести ветку onebox'a
-include(__DIR__.'/Smarty/2.6.26-optimized/Smarty.class.php');
-include(__DIR__.'/Smarty/Smarty_FileFetch.class.php');
 
 include __DIR__.'/StreamLoop/StreamLoop_HTTP_Const.class.php';
 include __DIR__.'/StreamLoop/StreamLoop_WebSocket_Const.class.php';
