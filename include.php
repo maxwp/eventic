@@ -208,10 +208,6 @@ ClassLoader::Get()->registerClassArray([
     __DIR__.'/Cmd/Cmd_Interface.interface.php',
 ]);
 
-// default contents
-// @todo только если был загружен EE
-ClassLoader::Get()->registerClass(__DIR__.'/content/ee500.class.php');
-
 /*ClassLoader::Get()->registerClass(__DIR__.'/MailQue/MailQue.class.php');
 ClassLoader::Get()->registerClass(__DIR__.'/MailQue/MailQue_Letter.class.php');
 ClassLoader::Get()->registerClass(__DIR__.'/MailQue/MailQue_Smarty.class.php');
