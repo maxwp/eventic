@@ -15,16 +15,12 @@ class SuperRun extends EE_Content_Abstract_Cli {
 
         // создаем объект
         // и ебашим в него аргументы
-        $object = new $className();
-        /**
-         * @var EE_AContent_Interface $object
-         */
-        foreach ($argumentArray as $key => $value) {
-            $object->setArgument($key, $value);
-        }
-
-        // запускаем
-        $object->process();
+        $result = EE::Get()->execute(
+            new EE_Call(
+                $className,
+                new EE_Request_Array($argumentArray)
+            )
+        );
     }
 
 }

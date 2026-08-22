@@ -56,12 +56,8 @@ class EE_Request_Cli implements EE_Request_Interface {
             $argumentArray['ee'] = $argv[1];
         }
 
-        // косим нулевой и первый элементы - там тупо ee-run.php и имя класса,
-        // причем они закосятся глобально и в следующем запуске не будет даже ee
-        unset($argv[0], $argv[1]);
-
-        foreach ($argv as $arg) {
-            if ($arg) {
+        foreach ($argv as $index => $arg) {
+            if ($index >= 2 && $arg) {
                 if (preg_match("/^(.+?)=\[(.+?)\]$/ius", $arg, $r)) {
                     // key=[a,b,c]
                     $argumentArray[$r[1]] = explode(',', $r[2]);
