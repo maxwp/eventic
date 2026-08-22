@@ -9,7 +9,7 @@
 /**
  * Response interface
  */
-interface EE_IResponse {
+interface EE_Response_Interface {
 
     public function getCode();
 

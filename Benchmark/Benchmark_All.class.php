@@ -1,5 +1,5 @@
 <?php
-class Benchmark_All extends EE_AContentCli {
+class Benchmark_All extends EE_Content_Abstract_Cli {
 
     public function process() {
         // @todo

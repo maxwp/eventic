@@ -1,5 +1,5 @@
 <?php
-class Benchmark_socket_reader extends EE_AContentCli {
+class Benchmark_socket_reader extends EE_Content_Abstract_Cli {
 
     public function process() {
         $socket = new Connection_SocketUDP();

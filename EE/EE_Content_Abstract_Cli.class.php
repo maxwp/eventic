@@ -9,7 +9,7 @@
 /**
  * Content for CLI
  */
-abstract class EE_AContentCli extends EE_AContent implements EE_IContent {
+abstract class EE_Content_Abstract_Cli extends EE_Content_Abstract implements EE_Content_Interface {
 
     public function printSGRStart(...$args) {
         Cli::PrintSGRStart(...$args);
@@ -73,7 +73,7 @@ abstract class EE_AContentCli extends EE_AContent implements EE_IContent {
         $this->printSGREnd();
     }
 
-    // experimental cache, maybe move to other class or inherit in other layer
+    // @todo experimental cache, maybe move to other class or inherit in other layer
     protected function _cacheLoad($cacheFile) {
         // cache - это попытка считать из кеша и сформировать его если его нет
         $cache = $this->getArgumentSecure('cache', EE_Typing::TYPE_STRING);

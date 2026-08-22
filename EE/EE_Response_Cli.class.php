@@ -9,7 +9,7 @@
 /**
  * Response for CLI
  */
-class EE_ResponseCLI implements EE_IResponse {
+class EE_Response_Cli implements EE_Response_Interface {
 
     public function getCode() {
         return $this->_code;

@@ -1,9 +1,9 @@
 <?php
 $tsStart = microtime(true);
 
-$routing = new EE_RoutingCLI();
-$request = new EE_RequestCLI();
-$response = new EE_ResponseCLI();
+$routing = new EE_Routing_Cli();
+$request = new EE_Request_Cli();
+$response = new EE_Response_Cli();
 
 EE::Get()->setRouting($routing);
 EE::Get()->execute($request, $response);

@@ -1,5 +1,5 @@
 <?php
-class SuperRun extends EE_AContentCli {
+class SuperRun extends EE_Content_Abstract_Cli {
 
     public function process() {
         $superConfig = SuperVisor::Get()->getConfig(
@@ -17,7 +17,7 @@ class SuperRun extends EE_AContentCli {
         // и ебашим в него аргументы
         $object = new $className();
         /**
-         * @var EE_AContent $object
+         * @var EE_AContent_Interface $object
          */
         foreach ($argumentArray as $key => $value) {
             $object->setArgument($key, $value);

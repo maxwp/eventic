@@ -1,5 +1,5 @@
 <?php
-class Cmd extends EE_AContentCli {
+class Cmd extends EE_Content_Abstract_Cli {
 
     public function process() {
         $socket = new Connection_SocketUDP();

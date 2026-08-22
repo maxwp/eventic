@@ -1,5 +1,5 @@
 <?php
-class Benchmark extends EE_AContentCli {
+class Benchmark extends EE_Content_Abstract_Cli {
 
     public function process() {
         $className = $this->getArgument('class', EE_Typing::TYPE_STRING);

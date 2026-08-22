@@ -8,7 +8,7 @@
 /**
  * Abstract content
  */
-abstract class EE_AContent implements EE_IContent {
+abstract class EE_Content_Abstract implements EE_Content_Interface {
 
     // @todo есть глобальное дерьмо - смешаны внутренние аргументы и внешние,
     //       более правильно передавать аргументы с наружи врунтрь и потом с ними работать,
@@ -24,11 +24,11 @@ abstract class EE_AContent implements EE_IContent {
      * @return mixed
      */
     public function getArgument($key, $type = false, $source = false) {
-        if ($source && $source == EE_IRequest::ARG_SOURCE_INTERNAL) {
+        if ($source && $source == EE_Request_Interface::ARG_SOURCE_INTERNAL) {
             // только внутренние аргументы
             $checkInternal = true;
             $checkExternal = false;
-        } elseif ($source && $source != EE_IRequest::ARG_SOURCE_INTERNAL) {
+        } elseif ($source && $source != EE_Request_Interface::ARG_SOURCE_INTERNAL) {
             // только внешние
             // (ARG_SOURCE_EXTERNAL нет, внешними считаются GET/POST/... - все что не INTERNAL)
             $checkInternal = false;

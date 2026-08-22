@@ -9,9 +9,9 @@
 /**
  * Routing for CLI
  */
-class EE_RoutingCLI implements EE_IRouting {
+class EE_Routing_Cli implements EE_IRouting {
 
-    public function matchContent(EE_IRequest $request) {
+    public function matchContent(EE_Request_Interface $request) {
         $a = $request->getArgumentArray();
 
         if (isset($a['ee'])) {

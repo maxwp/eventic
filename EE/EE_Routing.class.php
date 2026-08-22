@@ -15,10 +15,10 @@ class EE_Routing implements EE_IRouting {
      * На основе запроса выдать имя класса, который надо запустить
      * или бросить Exception
      *
-     * @param EE_IRequest $request
+     * @param EE_Request_Interface $request
      * @return string
      */
-    public function matchContent(EE_IRequest $request) {
+    public function matchContent(EE_Request_Interface $request) {
         // $url, $args = array(), $return = false
         $url = $request->getURL();
         $args = $request->getArgumentArray();

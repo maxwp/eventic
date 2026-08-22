@@ -19,7 +19,7 @@ class EE extends Pattern_ASingleton {
      * Вызвать движок
      * Передаем параметр $request, получаем $response
      */
-    public function execute(EE_IRequest $request, EE_IResponse $response) {
+    public function execute(EE_Request_Interface $request, EE_Response_Interface $response) {
         EE_Events::Get()->notify('EE:execute:before');
 
         // сохраняем request в себе
@@ -90,7 +90,7 @@ class EE extends Pattern_ASingleton {
     }
 
     /**
-     * @template T of EE_IContent
+     * @template T of EE_Content_Interface
      * @param class-string<T> $className
      * @return string
      * @throws EE_Exception
@@ -116,7 +116,7 @@ class EE extends Pattern_ASingleton {
     }
 
     /**
-     * @return EE_IRequest
+     * @return EE_Request_Interface
      */
     public function getRequest() {
         if (!$this->_request) {
@@ -143,7 +143,7 @@ class EE extends Pattern_ASingleton {
     }
 
     /**
-     * @return EE_IResponse
+     * @return EE_Response_Interface
      */
     public function getResponse() {
         if (!$this->_response) {
@@ -154,7 +154,7 @@ class EE extends Pattern_ASingleton {
     }
 
     public function setContentCurrent($content) {
-        if ($content instanceof EE_IContent) {
+        if ($content instanceof EE_Content_Interface) {
             $this->_contentCurrent = $content;
         } else {
             $content = $this->getContent($content);
@@ -163,7 +163,7 @@ class EE extends Pattern_ASingleton {
     }
 
     /**
-     * @return EE_IContent
+     * @return EE_Content_Interface
      */
     public function getContentCurrent() {
         return $this->_contentCurrent;
@@ -173,10 +173,10 @@ class EE extends Pattern_ASingleton {
      * Вернуть готовое html-содержимое контента и всех его вложений
      * с учетом иерархии
      *
-     * @param EE_IContent $content
+     * @param EE_Content_Interface $content
      * @return string
      */
-    public function renderTree(EE_IContent $content) {
+    public function renderTree(EE_Content_Interface $content) {
         $data = $content->render();
 
         $moveTo = $content->getValue('moveto');
@@ -196,7 +196,7 @@ class EE extends Pattern_ASingleton {
     /**
      * Вернуть объект имени класса
      *
-     * @template T of EE_IContent
+     * @template T of EE_Content_Interface
      * @param class-string<T> $className
      * @return T
      */
@@ -218,17 +218,17 @@ class EE extends Pattern_ASingleton {
      * Принудительно задать контент для подмены на этот класс
      *
      * @param string $className
-     * @param EE_IContent $content
+     * @param EE_Content_Interface $content
      * @return void
      */
-    public function setContent(string $className, EE_IContent $content) {
+    public function setContent(string $className, EE_Content_Interface $content) {
         $this->_contentRegistryArray->set($className, $content);
     }
 
     /**
      * Узнать, был ли загружен/вызван контент
      *
-     * @template T of EE_IContent
+     * @template T of EE_Content_Interface
      * @param class-string<T> $className
      * @return bool
      */

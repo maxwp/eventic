@@ -9,7 +9,7 @@
 /**
  * Request for CLI
  */
-class EE_RequestCLI implements EE_IRequest {
+class EE_Request_Cli implements EE_Request_Interface {
 
     // @todo отказаться от говна с одинаковыми аргументами, лучше явно массивы
     // @todo отказаться о -- prefix

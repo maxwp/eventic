@@ -9,7 +9,7 @@
 /**
  * Content interface
  */
-interface EE_IContent {
+interface EE_Content_Interface {
 
     public function process();
 
