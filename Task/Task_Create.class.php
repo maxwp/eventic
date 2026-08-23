@@ -4,7 +4,7 @@ class Task_Create extends EE_Content_Abstract_Cli {
     public function process() {
         $className = $this->getArgument('class', EE_Typing::TYPE_STRING);
 
-        $argumentArray = EE::Get()->getRequest()->getArgumentArray();
+        $argumentArray = $this->getArgumentArray();
         unset($argumentArray['class']);
         ksort($argumentArray);
 

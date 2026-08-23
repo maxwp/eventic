@@ -1,6 +1,15 @@
 <?php
 class Task extends Pattern_ASingleton {
 
+    public static function InitWorkers($cnt) {
+        for ($j = 1; $j <= $cnt; $j++) {
+            Cron::Get()->add(
+                Task_Worker::class,
+                ['thread' => $j],
+            );
+        }
+    }
+
     public function addTask($className, $argumentArray, $notificationKey = false) {
         // @todo set?
         return $this->_getRedis()->lPush(
