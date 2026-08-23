@@ -201,7 +201,7 @@ ClassLoader::Get()->registerClassArray([
     __DIR__.'/SuperVisor/SuperDebug.class.php',
 
     __DIR__.'/Cmd/Cmd.class.php',
-    __DIR__.'/Cmd/Cmd_Sender.class.php',
+    __DIR__.'/Cmd/Cmd_Worker.class.php',
     __DIR__.'/Cmd/Cmd_Receiver.class.php',
     __DIR__.'/Cmd/Cmd_SuperVisor.class.php',
 

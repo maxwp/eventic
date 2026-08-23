@@ -1,0 +1,24 @@
+<?php
+class Cmd_Worker extends EE_Content_Abstract_Cli {
+
+    // @todo rename to EE_Remote or something?
+
+    public function process() {
+        $socket = new Connection_SocketUDP();
+        $socket->setBufferSizeRead(5 * 1024 * 1024); // 5 mb буфер чтобы не потерять ничего
+        $socket->setTimeoutRead(30*60, 0); // выходить через 30 минут не было никаких данных вообще
+
+        try {
+            $socket->read(
+                Cmd::CMD_PORT,
+                new Cmd_Receiver(),
+                Cmd::CMD_MAX_LENGTH // max UDP MTU
+            );
+
+            $socket->disconnect();
+        } catch (Exception $e) {
+            $this->print_n_exception($e);
+        }
+    }
+
+}
