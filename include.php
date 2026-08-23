@@ -204,6 +204,10 @@ ClassLoader::Get()->registerClassArray([
     __DIR__.'/Cmd/Cmd_Sender.class.php',
     __DIR__.'/Cmd/Cmd_Receiver.class.php',
     __DIR__.'/Cmd/Cmd_SuperVisor.class.php',
+
+    __DIR__.'/Task/Task.class.php',
+    __DIR__.'/Task/Task_Create.class.php',
+    __DIR__.'/Task/Task_Worker.class.php',
 ]);
 
 /*ClassLoader::Get()->registerClass(__DIR__.'/MailQue/MailQue.class.php');
