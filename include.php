@@ -203,7 +203,6 @@ ClassLoader::Get()->registerClassArray([
     __DIR__.'/Cmd/Cmd.class.php',
     __DIR__.'/Cmd/Cmd_Sender.class.php',
     __DIR__.'/Cmd/Cmd_Receiver.class.php',
-    __DIR__.'/Cmd/Cmd_Interface.interface.php',
 ]);
 
 /*ClassLoader::Get()->registerClass(__DIR__.'/MailQue/MailQue.class.php');

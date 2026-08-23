@@ -2,7 +2,6 @@
 class Cmd_Sender extends Pattern_ASingleton {
 
     // @todo сократить cmd & data до 0/1
-    // @todo deflate
 
     public function sendCommand($serverIP, $cmdClass, $data) {
         $message = json_encode([

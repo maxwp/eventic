@@ -1,6 +1,8 @@
 <?php
 class Cmd extends EE_Content_Abstract_Cli {
 
+    // @todo rename to EE_Remote or something?
+
     public function process() {
         $socket = new Connection_SocketUDP();
         $socket->setBufferSizeRead(5 * 1024 * 1024); // 5 mb буфер чтобы не потерять ничего

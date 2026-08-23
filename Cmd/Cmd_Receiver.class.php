@@ -1,6 +1,8 @@
 <?php
 final class Cmd_Receiver implements Connection_Socket_IReceiver {
 
+    // @todo cmd rename to ee
+
     public function onReceive($tsReceived, $message, $fromAddress, $fromPort) {
         try {
             // распаковка и проверка команды
@@ -27,11 +29,7 @@ final class Cmd_Receiver implements Connection_Socket_IReceiver {
                 throw new Exception('Invalid cmd class');
             }
 
-            $object = new $cmdClass();
-            /**
-             * @var Cmd_Interface $object
-             */
-            $object->process($json['data']);
+            EE::Get()->execute(new EE_Call($cmdClass, new EE_Request_Array($json['data'])));
         } catch (Exception $te) {
             # debug:start
             Cli::Print_n(__CLASS__ . ': ' . $te->getMessage());
