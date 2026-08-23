@@ -123,7 +123,10 @@ abstract class EE_Content_Abstract implements EE_Content_Interface {
         return $this->_valueArray;
     }
 
-    private EE_Request_Interface $_request;
+    /**
+     * @var EE_Request_Interface
+     */
+    private $_request;
     private $_valueArray = [];
 
 }
