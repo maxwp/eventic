@@ -34,7 +34,7 @@ class Connection_SocketUDPConnected extends Connection_SocketUDP {
             $messageSize,
         ) != $messageSize) {
             # debug:start
-            Cli::Print(__CLASS__.": {$this->_host}:{$this->_port} write error: ".socket_strerror(socket_last_error($this->_socket)));
+            Cli::Print_n(__CLASS__.": {$this->_host}:{$this->_port} write error: ".socket_strerror(socket_last_error($this->_socket)));
             # debug:end
 
             // reconnect
