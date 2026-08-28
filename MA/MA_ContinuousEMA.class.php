@@ -28,7 +28,7 @@ class MA_ContinuousEMA implements MA_Interface {
     private function _advance($ts) {
         # debug:start
         if ($ts < $this->_ts) {
-            throw new LogicException('MA time travel');
+            throw new LogicException("MA time travel $ts < {$this->_ts}");
         }
         # debug:end
 
