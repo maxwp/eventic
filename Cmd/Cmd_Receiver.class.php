@@ -18,7 +18,7 @@ final class Cmd_Receiver implements Connection_Socket_IReceiver {
 
             if (empty($json['cmd'])) {
                 throw new Exception('Invalid cmd');
-            } elseif (empty($json['data'])) {
+            } elseif (!isset($json['data'])) {
                 throw new Exception('Invalid cmd data');
             } elseif (!is_array($json['data'])) {
                 throw new Exception('Invalid cmd argument array');
