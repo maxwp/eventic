@@ -9,10 +9,10 @@ class Cmd extends Pattern_ASingleton {
         );
     }
 
-    public function sendCommand($serverIP, $cmdClass, $data) {
+    public function sendCommand($serverIP, $cmdClass, $argumentArray) {
         $message = json_encode([
             'cmd' => $cmdClass,
-            'data' => $data,
+            'data' => $argumentArray,
         ]);
 
         $length = strlen($message);
