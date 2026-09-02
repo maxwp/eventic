@@ -1,17 +1,21 @@
 <?php
 class SuperVisor extends Pattern_ASingleton {
 
-    public function register($superID, $className, $argumentArray, $configArray, $ttl = 300) {
+    public function register($className, $argumentArray, $ttl = 300) {
         $redis = Connection::GetRedis()->getLink();
 
         $data = [
             'className' => $className,
             'argumentArray' => $argumentArray,
-            //'configArray' => $configArray,
         ];
+        $data = serialize($data);
+
+        // автоматизированно строим superID: в нем теперь класс + аргументы.
+        // так надо делать, чтобы если поменяются аргументы - то я кильнул процесс тоже.
+        $superID = $className.':'.md5($data);
 
         $redis->sAdd('supervisor', $superID);
-        $redis->set('supervisor:'.$superID, serialize($data), $ttl);
+        $redis->set('supervisor:'.$superID, $data, $ttl);
 
         # debug:start
         Cli::Print_n(__CLASS__.": register $superID");
@@ -50,6 +54,7 @@ class SuperVisor extends Pattern_ASingleton {
             // @todo формирование команд надо сделать универсально
             // @todo Cron это скорее ProcessManager с разными списками?
 
+            // список того что должно быть запущено
             $idArray[$superID] = $superID;
 
             Cron::Get()->add(
@@ -57,7 +62,7 @@ class SuperVisor extends Pattern_ASingleton {
                 [
                     'superid' => $superID,
                     'superclass' => $data['className'], // чисто для дебага, чтобы в ps | grep я мог увидеть что запущено
-                    //'superport' => crc32($superID) % 5000 + 5003, // определяем superport который будет передан как аргумент
+                    //'superport' => crc32($superID) % 5000 + 5003, // определяем superport который будет передан как аргумент @todo
                 ],
                 md5($superID) // pid
             );

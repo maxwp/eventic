@@ -1,8 +1,6 @@
 <?php
 class Cmd extends Pattern_ASingleton {
 
-    // @todo сократить cmd & data до 0/1
-
     public static function InitWorkers() {
         Cron::Get()->add(
             Cmd_Worker::class,
@@ -32,15 +30,13 @@ class Cmd extends Pattern_ASingleton {
         # debug:end
     }
 
-    public function sendCommandSupervisor($serverIP, $superID, $superClass, $argumentArray = [], $configArray = [], $ttl = 300) {
+    public function sendCommandSupervisor($serverIP, $className, $argumentArray = [], $ttl = 300) {
         $this->sendCommand( // supervisor
             $serverIP,
             Cmd_SuperVisor::class,
             [
-                'id' => $superID,
-                'cn' => $superClass,
+                'cn' => $className,
                 'aa' => $argumentArray,
-                'ca' => $configArray,
                 'ttl' => $ttl,
             ],
         );
