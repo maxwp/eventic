@@ -61,7 +61,6 @@ class SuperVisor extends Pattern_ASingleton {
                 SuperRun::class,
                 [
                     'superid' => $superID,
-                    'superclass' => $data['className'], // чисто для дебага, чтобы в ps | grep я мог увидеть что запущено
                     //'superport' => crc32($superID) % 5000 + 5003, // определяем superport который будет передан как аргумент @todo
                 ],
                 md5($superID) // pid
