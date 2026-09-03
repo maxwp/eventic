@@ -9,6 +9,10 @@ abstract class StreamLoop_Handler_Abstract {
         $this->_loop = $loop;
     }
 
+    public function updateHandlerPriority($priority) {
+        $this->_loop->updateHandlerPriority($this, $priority);
+    }
+
     /**
      * @var resource
      */

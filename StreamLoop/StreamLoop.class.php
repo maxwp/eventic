@@ -100,7 +100,8 @@ class StreamLoop {
             $this->_handlerArray[$streamID],
             $this->_selectReadArray[$streamID],
             $this->_selectWriteArray[$streamID],
-            $this->_selectTimeoutToArray[$streamID]
+            $this->_selectTimeoutToArray[$streamID],
+            $this->_priorityArray[$streamID]
         );
 
         // так как я дропнул handler - то надо точно пересчитывать ближайший тайм-аут
@@ -131,6 +132,7 @@ class StreamLoop {
         # debug:end
 
         $this->_handlerArray[$handler->streamID] = $handler;
+        $this->_priorityArray[$handler->streamID] = 0; // init
     }
 
     public function updateHandlerFlags(StreamLoop_Handler_Abstract $handler, $flagRead, $flagWrite) {
@@ -160,6 +162,46 @@ class StreamLoop {
         } else {
             $this->_rwFlag = false;
         }
+
+        $this->_sortHandlerArray();
+    }
+
+    /**
+     * Задать приоритет handler'a: по этому приоритету будут сортироваться массивы для select()
+     * Чем больше число - тем приоритет первее.
+     *
+     * Приоритет ставится per streamID, и если в будущем streamID пропадет (через resetHandler или unregisterHandler)
+     *
+     * @param StreamLoop_Handler_Abstract $handler
+     * @param $priority
+     * @return void
+     */
+    public function updateHandlerPriority(StreamLoop_Handler_Abstract $handler, $priority) {
+        $this->_priorityArray[$handler->streamID] = $priority;
+
+        $this->_sortHandlerArray();
+    }
+
+    private function _sortHandlerArray() {
+        $priorityArray = $this->_priorityArray;
+
+        // больший priority должен находиться выше (раньше)
+        // @todo в метод
+        $compare = static function ($streamIDA, $streamIDB) use ($priorityArray) {
+            // приоритет есть всегда
+            $priorityA = $priorityArray[$streamIDA];
+            $priorityB = $priorityArray[$streamIDB];
+
+            return $priorityB <=> $priorityA;
+        };
+
+        if (count($this->_selectReadArray) > 1) {
+            uksort($this->_selectReadArray, $compare);
+        }
+
+        if (count($this->_selectWriteArray) > 1) {
+            uksort($this->_selectWriteArray, $compare);
+        }
     }
 
     /**
@@ -176,13 +218,14 @@ class StreamLoop {
         }
         # debug:end
 
-        // to locals не нужен, только начиная от 4х использований
+        // to locals не нужен, только начиная от 4х использований @todo
         unset(
             $this->_selectReadArray[$handler->streamID],
             $this->_selectWriteArray[$handler->streamID],
             $this->_selectTimeoutToArray[$handler->streamID],
         );
 
+        $this->_priorityArray[$handler->streamID] = 0; // init
         $this->_selectTimeoutToMin = min($this->_selectTimeoutToArray);
 
         // обновляем rw флаг
@@ -230,6 +273,10 @@ class StreamLoop {
      * @var array<StreamLoop_Handler_Abstract>
      */
     private $_handlerArray = [];
+    /**
+     * @var array<float>
+     */
+    private $_priorityArray = [];
     private $_rwFlag = false; // bool
     private $_selectReadArray = [];
     private $_selectWriteArray = [];
