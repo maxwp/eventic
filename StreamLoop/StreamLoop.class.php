@@ -6,7 +6,9 @@ class StreamLoop {
 
     public function __construct() {
         // сразу создаем внутренние handler-ы: GC & sorting
-        // @todo стоит ли объеденять? или отдельный if прямо внутри run?
+        // я могу лупить сколько угодно таймеров, потому что они меняют только timerArray и handlerArray,
+        // а в hot path run нет никаких пересчетов, кроме foreach timeoutArray,
+        // то есть два handler'a добавляют только 2 итерации и 2 if'a
         new StreamLoop_GC($this);
         new StreamLoop_Sort($this);
     }
@@ -69,11 +71,14 @@ class StreamLoop {
                 }
             }
 
-            // теперь массив _selectTimeoutToArray никогда не пустой и в нем всегда есть элемент 0 => бесконечность
-            foreach ($this->_selectTimeoutToArray as $streamID => $timeoutTo) {
-                if ($tsSelect >= $timeoutTo) {
-                    if (isset($this->_handlerArray[$streamID])) {
-                        $this->_handlerArray[$streamID]->readyTimeout($tsSelect);
+            // этот if экономит 100 ns/call: если нет ближайшего таймаута - нахуй итерацию
+            if ($tsSelect >= $this->_selectTimeoutToMin) {
+                // массив _selectTimeoutToArray никогда не пустой и в нем всегда есть элемент 0 => бесконечность
+                foreach ($this->_selectTimeoutToArray as $streamID => $timeoutTo) {
+                    if ($tsSelect >= $timeoutTo) {
+                        if (isset($this->_handlerArray[$streamID])) {
+                            $this->_handlerArray[$streamID]->readyTimeout($tsSelect);
+                        }
                     }
                 }
             }
