@@ -10,6 +10,9 @@ class StreamLoop_Sort extends StreamLoop_Timer_Abstract {
             200, // special timer ID, реально будет -200
             60
         );
+
+        // самый низкий приоритет
+        $this->updateHandlerPriority(-999);
     }
 
     protected function _onTimer($tsSelect) {

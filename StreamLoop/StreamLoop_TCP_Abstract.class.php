@@ -1,6 +1,6 @@
 <?php
 abstract class StreamLoop_TCP_Abstract extends StreamLoop_Handler_Abstract {
-    
+
     protected function _createAndConnectTCP() {
         # debug:start
         Cli::Print_n(__CLASS__." connecting to {$this->_destinationHost} ip={$this->_destinationIP} port={$this->_destinationPort} bind={$this->_sourceIP}:{$this->_sourcePort} crypto={$this->_crypto}");

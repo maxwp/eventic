@@ -217,6 +217,10 @@ class StreamLoop {
         if (count($this->_selectWriteArray) > 1) {
             uksort($this->_selectWriteArray, $compare);
         }
+
+        // массив timeout-ов тоже сортируем:
+        // в случае если в один момент надо будет вызвать кучу таймеров, то чтобы всякие race/gc/sorts были в конце.
+        uksort($this->_selectTimeoutToArray, $compare);
     }
 
     /**

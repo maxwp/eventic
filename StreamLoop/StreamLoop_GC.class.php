@@ -10,6 +10,9 @@ class StreamLoop_GC extends StreamLoop_Timer_Abstract {
             100, // special timer ID for GC, будет -100 внутри
             3600 // every hour
         );
+
+        // самый низкий приоритет
+        $this->updateHandlerPriority(-999);
     }
 
     protected function _onTimer($tsSelect) {
