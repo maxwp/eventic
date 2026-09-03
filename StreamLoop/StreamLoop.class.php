@@ -47,8 +47,10 @@ class StreamLoop {
             // 3. так как я не делаю проверку result === false - то всегда надо быть готовым что readyXXX может вызваться
             //    в случае result === false, и тогда будут холостые обработчики. Но это было 1 раз за год.
             //    и было выгодно закосить эту проверку на result.
+            // @todo скорее всего нифига, уже больше одного, но это не отменяет проблемы номер 2
+            //       а разве именно to locals это создавал?
 
-            // тут if не нужен, потому что чаще всего есть r
+            // тут if не нужен, потому что чаще всего есть именно r
             foreach ($r as $streamID => $stream) {
                 $this->_handlerArray[$streamID]->readyRead($tsSelect);
             }
@@ -95,7 +97,6 @@ class StreamLoop {
         }
         # debug:end
 
-        // multi-unset
         unset(
             $this->_handlerArray[$streamID],
             $this->_selectReadArray[$streamID],
@@ -125,33 +126,39 @@ class StreamLoop {
      * @throws StreamLoop_Exception
      */
     public function registerHandler(StreamLoop_Handler_Abstract $handler) {
+        // to locals
+        $streamID = $handler->streamID;
+
         # debug:start
-        if (!$handler->streamID) {
+        if (!$streamID) {
             throw new StreamLoop_Exception('Cannot register handler without streamID');
         }
         # debug:end
 
-        $this->_handlerArray[$handler->streamID] = $handler;
-        $this->_priorityArray[$handler->streamID] = 0; // init
+        $this->_handlerArray[$streamID] = $handler;
+        $this->_priorityArray[$streamID] = 0; // init
     }
 
     public function updateHandlerFlags(StreamLoop_Handler_Abstract $handler, $flagRead, $flagWrite) {
+        // to locals
+        $streamID = $handler->streamID;
+
         # debug:start
-        if (!$handler->streamID) {
+        if (!$streamID) {
             throw new StreamLoop_Exception('Cannot register handler without streamID');
         }
         # debug:end
 
         if ($flagRead) {
-            $this->_selectReadArray[$handler->streamID] = $handler->stream;
+            $this->_selectReadArray[$streamID] = $handler->stream;
         } else {
-            unset($this->_selectReadArray[$handler->streamID]);
+            unset($this->_selectReadArray[$streamID]);
         }
 
         if ($flagWrite) {
-            $this->_selectWriteArray[$handler->streamID] = $handler->stream;
+            $this->_selectWriteArray[$streamID] = $handler->stream;
         } else {
-            unset($this->_selectWriteArray[$handler->streamID]);
+            unset($this->_selectWriteArray[$streamID]);
         }
 
         // обновляем rw флаг
@@ -212,20 +219,24 @@ class StreamLoop {
      * @throws StreamLoop_Exception
      */
     public function resetHandler(StreamLoop_Handler_Abstract $handler) {
+        // @todo это почти unregisterHandler - может заменить на него?
+
+        // to locals
+        $streamID = $handler->streamID;
+
         # debug:start
-        if (!$handler->streamID) {
+        if (!$streamID) {
             throw new StreamLoop_Exception('Cannot register handler without streamID');
         }
         # debug:end
 
-        // to locals не нужен, только начиная от 4х использований @todo
         unset(
-            $this->_selectReadArray[$handler->streamID],
-            $this->_selectWriteArray[$handler->streamID],
-            $this->_selectTimeoutToArray[$handler->streamID],
+            $this->_selectReadArray[$streamID],
+            $this->_selectWriteArray[$streamID],
+            $this->_selectTimeoutToArray[$streamID],
         );
 
-        $this->_priorityArray[$handler->streamID] = 0; // init
+        $this->_priorityArray[$streamID] = 0; // init
         $this->_selectTimeoutToMin = min($this->_selectTimeoutToArray);
 
         // обновляем rw флаг

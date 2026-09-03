@@ -399,7 +399,10 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
         // обнуляем состояние в ready и стираем все таймеры
         $this->_state = $state; // in reset
 
-        $this->_loop->resetHandler($this); // важно: reset снимает флаги чтобы получить тишину, в тч таймаут
+        // важно: reset снимает флаги чтобы получить тишину, в тч таймаут
+        // для http после reset ничего не жду, поэтому нужно уведомить StreamLoop что ничего не надо делать,
+        // @todo это почти unregisterHandler - может заменить на него?
+        $this->_loop->resetHandler($this);
     }
 
     public function getState() {
