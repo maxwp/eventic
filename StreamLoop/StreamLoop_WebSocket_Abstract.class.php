@@ -46,10 +46,19 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         // это приводит к тому, что SL временно забывает про handler и не ебет его
         $this->_loop->unregisterHandler($this); // on disconnect
 
+        // @todo надо замерять еще скорость открытия - вдруг там такая же хуйня
+        // @todo или временно поставить race:3
+
+        //stream_socket_shutdown($this->stream, STREAM_SHUT_RDWR);
+        //print_r(stream_get_meta_data($this->stream));
+        //$t = hrtime(true);
         // бывают ситуации когда throwError два раза подряд и тогда disconnect два раза подряд
         if (is_resource($this->stream)) {
             fclose($this->stream);
         }
+        //$t = hrtime(true) - $t;
+        //var_dump($t);
+
         $this->streamID = 0;
         $this->stream = null;
 
