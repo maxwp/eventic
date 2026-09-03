@@ -1,6 +1,8 @@
 <?php
 abstract class StreamLoop_Timer_Abstract extends StreamLoop_Handler_Abstract {
 
+    // @todo dynamic timeout option
+
     abstract protected function _onTimer($tsSelect);
 
     /**

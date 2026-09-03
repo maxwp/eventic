@@ -4,6 +4,13 @@ class StreamLoop {
     // NB: некоторые проверки делаются только в debug-mode, так сделано специально чтобы hot-path получится
     // extremely fucking fast
 
+    public function __construct() {
+        // сразу создаем внутренние handler-ы: GC & sorting
+        // @todo стоит ли объеденять? или отдельный if прямо внутри run?
+        new StreamLoop_GC($this);
+        new StreamLoop_Sort($this);
+    }
+
     public function run() {
         // первый раз меряем tsSelect до круга
         $tsSelect = microtime(true);
@@ -169,8 +176,6 @@ class StreamLoop {
         } else {
             $this->_rwFlag = false;
         }
-
-        $this->_sortHandlerArray();
     }
 
     /**
@@ -186,20 +191,18 @@ class StreamLoop {
     public function updateHandlerPriority(StreamLoop_Handler_Abstract $handler, $priority) {
         $this->_priorityArray[$handler->streamID] = $priority;
 
-        $this->_sortHandlerArray();
+        // сортировка запускается отдельно на отдельном handler
     }
 
-    private function _sortHandlerArray() {
+    public function sortHandlerArray() {
         $priorityArray = $this->_priorityArray;
 
-        // больший priority должен находиться выше (раньше)
-        // @todo в метод
-        $compare = static function ($streamIDA, $streamIDB) use ($priorityArray) {
-            // приоритет есть всегда
-            $priorityA = $priorityArray[$streamIDA];
-            $priorityB = $priorityArray[$streamIDB];
+        // приоритет есть всегда для любого handler'a, поэтому никаких if-ов
 
-            return $priorityB <=> $priorityA;
+        // больший priority должен находиться выше (раньше)
+        // специальный хак с use priorityArray чтобы сделать to locals
+        $compare = static function ($streamIDA, $streamIDB) use ($priorityArray) {
+            return $priorityArray[$streamIDB] <=> $priorityArray[$streamIDA];
         };
 
         if (count($this->_selectReadArray) > 1) {

@@ -1,4 +1,7 @@
 <?php
+/**
+ * Раз в час запускаем Garbage Collector
+ */
 class StreamLoop_GC extends StreamLoop_Timer_Abstract {
 
     public function __construct(StreamLoop $loop) {

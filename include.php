@@ -156,6 +156,7 @@ ClassLoader::Get()->registerClassArray([
     __DIR__.'/StreamLoop/StreamLoop_WebSocket_Abstract.class.php',
     __DIR__.'/StreamLoop/StreamLoop_Timer_Abstract.class.php',
     __DIR__.'/StreamLoop/StreamLoop_GC.class.php',
+    __DIR__.'/StreamLoop/StreamLoop_Sort.class.php',
 
     __DIR__.'/Benchmark/Benchmark_Interface.interface.php',
     __DIR__.'/Benchmark/Benchmark_Stub.class.php',
