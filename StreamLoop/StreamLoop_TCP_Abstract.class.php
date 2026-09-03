@@ -23,7 +23,7 @@ abstract class StreamLoop_TCP_Abstract extends StreamLoop_Handler_Abstract {
             ]),
         );
 
-        // @todo 12 us, из которых 10 доставание сокета и установка $socket->xxx
+        // сейчас весь этот блок > 4 us/call
         if ($stream) {
             $this->stream = $stream;
             $this->streamID = (int) $stream;
@@ -32,12 +32,6 @@ abstract class StreamLoop_TCP_Abstract extends StreamLoop_Handler_Abstract {
             $this->_loop->registerHandler($this); // 1st register (for connecting)
             $this->_loop->updateHandlerFlags($this, false, true); // create and connect
             $this->_loop->updateStreamTimeout($this->streamID, microtime(true) + 10);
-
-            // Устанавливаем буфер до начала SSL
-            $socket = new Connection_SocketStream($stream); // @todo 5 us, и все что ниже еще 5 us
-            $socket->setBufferSizeRead(2 * 1024 * 1024);
-            $socket->setBufferSizeWrite(2 * 1024 * 1024);
-            $socket->setKeepAlive();
 
             stream_set_blocking($stream, false);
 
