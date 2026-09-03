@@ -1,20 +1,21 @@
 <?php
 abstract class StreamLoop_TCP_Abstract extends StreamLoop_Handler_Abstract {
-
-    // @todo теоретически можно перейти на trait, но что это даст?
-
+    
     protected function _createAndConnectTCP() {
         # debug:start
         Cli::Print_n(__CLASS__." connecting to {$this->_destinationHost} ip={$this->_destinationIP} port={$this->_destinationPort} bind={$this->_sourceIP}:{$this->_sourcePort} crypto={$this->_crypto}");
         # debug:end
 
+        // total 45 us/call
+
+        // @todo 32 us/call
         $stream = stream_socket_client(
             'tcp://'.($this->_destinationIP ?: $this->_destinationHost).':'.$this->_destinationPort,
             $errno,
             $errstr,
-            0, // timeout = 0, чтобы мгновенно вернулось
-            STREAM_CLIENT_CONNECT | STREAM_CLIENT_ASYNC_CONNECT,
-            stream_context_create([
+            0, // игнорируется для ASYNC_CONNECT
+            STREAM_CLIENT_ASYNC_CONNECT, // без connect быстрее
+            stream_context_create([ // само создание контекста 2 us
                 'socket' => [ // супер важно: надо создавать контекст без ssl-опций!
                     'tcp_nodelay' => true,  // no Nagle algorithm
                     'bindto' => $this->_sourceIP.':'.$this->_sourcePort,
@@ -22,6 +23,7 @@ abstract class StreamLoop_TCP_Abstract extends StreamLoop_Handler_Abstract {
             ]),
         );
 
+        // @todo 12 us, из которых 10 доставание сокета и установка $socket->xxx
         if ($stream) {
             $this->stream = $stream;
             $this->streamID = (int) $stream;
@@ -32,12 +34,10 @@ abstract class StreamLoop_TCP_Abstract extends StreamLoop_Handler_Abstract {
             $this->_loop->updateStreamTimeout($this->streamID, microtime(true) + 10);
 
             // Устанавливаем буфер до начала SSL
-            $socket = new Connection_SocketStream($stream);
+            $socket = new Connection_SocketStream($stream); // @todo 5 us, и все что ниже еще 5 us
             $socket->setBufferSizeRead(2 * 1024 * 1024);
             $socket->setBufferSizeWrite(2 * 1024 * 1024);
             $socket->setKeepAlive();
-            $socket->setQuickACK();
-            $socket->setCORK();
 
             stream_set_blocking($stream, false);
 
