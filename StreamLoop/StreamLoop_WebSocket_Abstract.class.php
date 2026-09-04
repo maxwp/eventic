@@ -61,11 +61,6 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
     public function readyRead($tsSelect) {
         // if-tree optimization
         if ($this->_state == StreamLoop_WebSocket_Const::STATE_READY) {
-            $drainLimit = $this->_readDrainLimit;
-            # debug:start
-            $drainCounter = 1;
-            # debug:end
-
             // to locals (оправдано)
             $buffer = $this->_buffer;
             $bufLen = $this->_bufferLength;
@@ -73,21 +68,12 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
 
             // один общий try-catch экономит до 11% cpu time если вызовов onReceive несколько
             try {
-                // dynamic drain: если после вычитки большого пакета fread() он считался ровно впритык - то вызываем
-                // чтение еще раз и так до drainLimit.
-                // Надо стараться делать меньше fread (syscall overhead), но если все-таки данных много - то лучше читать
-                // еще раз, чтобы не ждать нового круга stream_select(). Но опять-таки, это сильно зависит от количество
-                // потоков внутри всего StreamLoop и насколько я могу затупить на одном handler'e.
-                do {
-                    // я не использую stream to locals, потому что в 95% случаев чтение одно
-                    // и у меня есть проверка $length < $readFrameLength - то есть я выйду сразу же и не буду
-                    // пытаться сделать второй fread
+                for ($drainCounter = 1; $drainCounter <= 10; $drainCounter ++) {
                     $data = fread($this->stream, 16384);
                     $length = strlen($data);
 
                     # debug:start
                     Cli::Print_n(__CLASS__ . ": drain=$drainCounter fread($length) $data");
-                    $drainCounter ++;
                     # debug:end
 
                     // чаще всего будет срабатывать length > 0
@@ -250,7 +236,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                         // на втором месте по частоте срабатывания - пустая строка, я упрусь в drain limit
                         // Если fread вернул пустую строку, проверяем, достигнут ли EOF
                         // upd: она запускается только если drain вернул пустоту, что бывает очень редко, так как есть проверка на length
-                        if ($drainLimit == $this->_readDrainLimit) { // этот if экономит 350 -> 30 ns/call
+                        if ($drainCounter == 1) { // этот if экономит 350 -> 30 ns/call
                             if ($this->_checkEOF($tsSelect)) { // in drain read
                                 // EOF: connection closed by remote host
                                 return; // на выход, чтобы дальше ничего не проверять, ошибка уже выкинута
@@ -265,7 +251,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                         //$errorString = error_get_last()['message'];
                         throw new StreamLoop_Exception(StreamLoop_WebSocket_Const::ERROR_RESET_BY_PEER);
                     }
-                } while (--$drainLimit);
+                }
 
                 $this->_buffer = $buffer;
                 $this->_bufferLength = $bufLen;
@@ -517,14 +503,6 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         }
     }
 
-    public function setDrainLimit($drain) {
-        $drain = (int) $drain;
-        if ($drain <= 0) {
-            throw new StreamLoop_Exception("Drain must be a positive integer");
-        }
-        $this->_readDrainLimit = $drain;
-    }
-
     public function getState() {
         return $this->_state;
     }
@@ -547,7 +525,6 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
     private $_bufferOffset = 0; // cursor: сколько байт уже "съели" из _buffer
     private $_state = 0; // 0 is a stop, by default
     private $_active = false; // bool, см логику idle ping @todo rf naming
-    private $_readDrainLimit = 10; // default
     private $_chr126, $_chr127;
     private $_pingPeriod = 0.0; // float
     private $_fragmentOpcode = -1; // -1 это null, я так сделал чтобы не делать === потому что оно тяжелее чем ==
