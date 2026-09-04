@@ -299,12 +299,14 @@ class StreamLoop {
     /**
      * @var array<float>
      */
-    private $_priorityArray = [];
     private $_rwFlag = false; // bool
     private $_selectReadArray = [];
     private $_selectWriteArray = [];
     private $_selectTimeoutToArray = [
         0 => PHP_FLOAT_MAX, // специальный костыль, чтобы массив таймаутов всегда был не пустой; sentinel: keeps timeout array non-empty; streamID=0 is forbidden
+    ];
+    private $_priorityArray = [
+        0 => 0, // костыль для priority sorting, потому что он сортирует timeoutArray тоже
     ];
     private $_selectTimeoutToMin = PHP_FLOAT_MAX; // float
 

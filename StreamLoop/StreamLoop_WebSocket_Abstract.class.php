@@ -238,8 +238,12 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                         }
 
                         if ($length < 16384) {
-                            // Если fread вернул меньше, чем запрошено - дальше не дренируем
-                            break;
+                            // Если fread вернул меньше, чем запрошено - дальше не дренируем,
+                            // но только для non-crypto, потому что SSL_read будет выдавать меньшие фрагменты чем 16k,
+                            // а для crypto я буду проверять на === ''
+                            if (!$this->_crypto) {
+                                break;
+                            }
                         }
                     } elseif ($data === '') {
                         // на втором месте по частоте срабатывания - пустая строка, я упрусь в drain limit
