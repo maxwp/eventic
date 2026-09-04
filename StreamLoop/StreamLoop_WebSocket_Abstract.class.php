@@ -249,9 +249,11 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                         // на втором месте по частоте срабатывания - пустая строка, я упрусь в drain limit
                         // Если fread вернул пустую строку, проверяем, достигнут ли EOF
                         // upd: она запускается только если drain вернул пустоту, что бывает очень редко, так как есть проверка на length
-                        if ($this->_checkEOF($tsSelect)) { // in drain read
-                            // EOF: connection closed by remote host
-                            return; // на выход, чтобы дальше ничего не проверять, ошибка уже выкинута
+                        if ($drainCounter == $this->_readDrainLimit) { // этот if экономит 350 -> 30 ns/call
+                            if ($this->_checkEOF($tsSelect)) { // in drain read
+                                // EOF: connection closed by remote host
+                                return; // на выход, чтобы дальше ничего не проверять, ошибка уже выкинута
+                            }
                         }
                         break;
                     } elseif ($data === false) {
