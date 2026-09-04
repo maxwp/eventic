@@ -383,21 +383,6 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
         $this->_onError($tsSelect, $errorCode, $errorMessage);
     }
 
-    private function _checkEOF($tsSelect) { // @todo protected
-        if (feof($this->stream)) {
-            // затем кидаем ошибку
-            $this->throwError( // EOF
-                $tsSelect,
-                StreamLoop_HTTP_Const::ERROR_EOF, // http code 0
-                'Connection closed by server', // ясное сообщение
-            );
-
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     private function _processHandshake($tsSelect) {
         $return = stream_socket_enable_crypto(
             $this->stream,

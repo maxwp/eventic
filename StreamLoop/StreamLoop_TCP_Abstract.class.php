@@ -44,6 +44,19 @@ abstract class StreamLoop_TCP_Abstract extends StreamLoop_Handler_Abstract {
         }
     }
 
+    protected function _checkEOF($tsSelect) {
+        if (feof($this->stream)) {
+            $this->throwError(
+                $tsSelect,
+                StreamLoop_WebSocket_Const::ERROR_EOF,
+                json_encode(stream_get_meta_data($this->stream)),
+            );
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     protected function _updateDestination($host, $port, $ip = false, $crypto = true) {
         if (Validator::CheckHost($host)) {
             if (Validator::CheckPort($port)) {
