@@ -72,56 +72,83 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
         // if-tree optimization
         if ($this->_state == StreamLoop_HTTP_Const::STATE_WAIT_FOR_RESPONSE_HEADERS) {
             // drain read headers
-            $readIndex = 0;
-            do {
-                $readIndex++;
+            $buffer = $this->_buffer;
+            $this->_buffer = '';
+
+            for ($readIndex = 1; $readIndex <= 100; $readIndex++) { // тут много, потому что заголовков может быть куча
                 $line = fgets($this->stream, 4096); // я читаю через fgetS и врядли будет строка больше 4Kb
 
-                $this->_buffer .= $line;
-
-                // такая строка = конец блока заголовков
-                if ($line == "\r\n" || $line == "\n") {
-                    // разбираем заголовки в assoc массив
-                    // @todo возможно можно сразу накапливать headerArray вместо buffer;
-                    //       то есть если я жду заголовки - то сразу писать их в header и так пока не встречу rn
-                    $lineArray = explode("\r\n", $this->_buffer);
-
-                    // @todo можно ускорить за счет [...]
-                    // Формат статус-строки: HTTP/1.1 200 OK
-                    $statusParts = explode(' ', $lineArray[0], 3);
-                    // $statusParts[0] = "HTTP/1.1"
-                    // $statusParts[1] = "200"
-                    // $statusParts[2] = "OK"
-
-                    $this->_statusCode = (int) ($statusParts[1] ?? 0);
-                    $this->_statusMessage = $statusParts[2] ?? '';
-
-                    // @todo сохранить content-length отдельно если он есть
-                    $this->_headerArray = [];
-                    foreach ($lineArray as $line) {
-                        // разделяем заголовок на имя и значение
-                        $x = explode(':', $line, 2);
-                        if (isset($x[1])) {
-                            // уже lowercase key
-                            $this->_headerArray[strtolower(trim($x[0]))] = trim($x[1]);
-                        }
-                    }
-
-                    $this->_state = StreamLoop_HTTP_Const::STATE_WAIT_FOR_RESPONSE_BODY; // headers readed -> waiting for body
-
-                    $this->_buffer = '';
-
-                    return;
-                } elseif (!$line) {
-                    // Если до этого уже прочитали строки headers,
-                    // значит просто закончили drain.
+                // Проверяем false до конкатенации.
+                if ($line === false) {
+                    // EOF проверяем только на первом чтении.
                     if ($readIndex == 1) {
-                        $this->_checkEOF($tsSelect);
+                        if ($this->_checkEOF($tsSelect)) {
+                            return;
+                        }
                     }
 
                     break;
                 }
-            } while (true);
+
+                $buffer .= $line;
+
+                if ($line == "\r\n" || $line == "\n") {
+                    // Headers полностью прочитаны.
+                    $lineArray = explode("\r\n", $buffer);
+
+                    $statusParts = explode(' ', $lineArray[0], 3);
+
+                    $this->_statusCode = (int) ($statusParts[1] ?? 0);
+                    $this->_statusMessage = $statusParts[2] ?? '';
+
+                    $this->_headerArray = [];
+                    foreach ($lineArray as $headerLine) {
+                        $x = explode(':', $headerLine, 2);
+                        if (isset($x[1])) {
+                            $this->_headerArray[strtolower(trim($x[0]))] = trim($x[1]);
+                        }
+                    }
+
+                    /*
+                     * Content-Length: 0 завершаем прямо здесь.
+                     *
+                     * Если просто перейти в WAIT_FOR_RESPONSE_BODY,
+                     * новых байтов не придёт и следующий readyRead()
+                     * может никогда не вызваться.
+                     */
+                    if (
+                        isset($this->_headerArray['content-length'])
+                        && (int) $this->_headerArray['content-length'] == 0
+                    ) {
+                        $statusCode = $this->_statusCode;
+                        $statusMessage = $this->_statusMessage;
+                        $headerArray = $this->_headerArray;
+
+                        // Сначала переводим handler в READY.
+                        $this->_reset();
+
+                        // Затем пользователь может отправить следующий request.
+                        $this->_onReceive(
+                            $tsSelect,
+                            $statusCode,
+                            $statusMessage,
+                            $headerArray,
+                            ''
+                        );
+
+                        return;
+                    }
+
+                    $this->_state =
+                        StreamLoop_HTTP_Const::STATE_WAIT_FOR_RESPONSE_BODY;
+
+                    // $_buffer уже пустой благодаря ownership transfer.
+                    return;
+                }
+            }
+
+            // Headers пока не закончились — сохраняем накопленное.
+            $this->_buffer = $buffer;
         } elseif ($this->_state == StreamLoop_HTTP_Const::STATE_WAIT_FOR_RESPONSE_BODY) {
             // @todo как смержить wait for headers & body в кучу? Все равно у меня http 1.1
             $headerArray = $this->_headerArray; // @todo отдельная переменная вместо массива
