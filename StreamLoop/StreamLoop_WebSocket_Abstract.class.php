@@ -29,8 +29,6 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         $this->_beforeConnect();
 
         $this->_buffer = '';
-        $this->_bufferLength = 0;
-        $this->_bufferOffset = 0;
 
         $this->_createAndConnectTCP();
 
@@ -50,8 +48,6 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         $this->stream = null; // вместо fclose
 
         $this->_buffer = '';
-        $this->_bufferLength = 0;
-        $this->_bufferOffset = 0;
         $this->_fragmentOpcode = -1;
         $this->_fragmentPayload = '';
 
@@ -61,10 +57,9 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
     public function readyRead($tsSelect) {
         // if-tree optimization
         if ($this->_state == StreamLoop_WebSocket_Const::STATE_READY) {
-            // to locals (оправдано)
             $buffer = $this->_buffer;
-            $bufLen = $this->_bufferLength;
-            $offset = $this->_bufferOffset;
+            $bufLen = strlen($buffer); // O(1)
+            $offset = 0;
 
             // один общий try-catch экономит до 11% cpu time если вызовов onReceive несколько
             try {
@@ -212,15 +207,9 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                             $offset += $frameLength;
                         }
 
-                        // если всё съели - сбрасываем буфер полностью (самый дешевый случай)
                         if ($offset == $bufLen) {
                             $buffer = '';
                             $bufLen = 0;
-                            $offset = 0;
-                        } elseif ($offset > 65536) {
-                            // редкое "сжатие" буфера: чаще всего фреймы летят целые, поэтому обрабатывается предыдущее условие
-                            $buffer = substr($buffer, $offset);
-                            $bufLen -= $offset;
                             $offset = 0;
                         }
 
@@ -253,9 +242,11 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                     }
                 }
 
+                // сохраняем хвост
+                if ($offset > 0) {
+                    $buffer = substr($buffer, $offset);
+                }
                 $this->_buffer = $buffer;
-                $this->_bufferLength = $bufLen;
-                $this->_bufferOffset = $offset;
 
             } catch (StreamLoop_Exception $se) {
                 $this->throwError($tsSelect, $se->getMessage());
@@ -371,8 +362,6 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                     $this->_loop->updateStreamTimeout($this->streamID, $tsSelect + $this->_pingPeriod); // upgrading done -> ready with iframe-layer ping-pong
 
                     $this->_buffer = '';
-                    $this->_bufferLength = 0;
-                    $this->_bufferOffset = 0;
 
                     // считаем соединение активно и с ни все ок
                     $this->_active = true;
@@ -521,8 +510,6 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
     private $_headerArray = [];
     private $_path = ''; // string
     private $_buffer = ''; // string
-    private $_bufferLength = 0; // int
-    private $_bufferOffset = 0; // cursor: сколько байт уже "съели" из _buffer
     private $_state = 0; // 0 is a stop, by default
     private $_active = false; // bool, см логику idle ping @todo rf naming
     private $_chr126, $_chr127;
