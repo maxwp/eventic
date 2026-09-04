@@ -2,7 +2,7 @@
 abstract class StreamLoop_UDP_Abstract extends StreamLoop_Handler_Abstract {
 
     abstract protected function _setupConnection();
-    abstract protected function _onReceive($tsSelect, $message, $messageSize, $fromAddress);
+    abstract protected function _onReceive($tsSelect, $message, $messageSize);
 
     abstract protected function _onError($tsSelect, $errorCode);
 

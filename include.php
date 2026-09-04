@@ -150,7 +150,6 @@ ClassLoader::Get()->registerClassArray([
     __DIR__.'/StreamLoop/StreamLoop_TCP_Abstract.class.php',
     __DIR__.'/StreamLoop/StreamLoop_HTTP_Abstract.class.php',
     __DIR__.'/StreamLoop/StreamLoop_UDP_Abstract.class.php',
-    __DIR__.'/StreamLoop/StreamLoop_UDP_Drain_Abstract.class.php',
     __DIR__.'/StreamLoop/StreamLoop_UDP_DrainForward_Abstract.class.php',
     __DIR__.'/StreamLoop/StreamLoop_UDP_DrainBackward_Abstract.class.php',
     __DIR__.'/StreamLoop/StreamLoop_WebSocket_Abstract.class.php',

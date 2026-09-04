@@ -1,21 +1,21 @@
 <?php
-abstract class StreamLoop_UDP_DrainBackward_Abstract extends StreamLoop_UDP_Drain_Abstract {
+abstract class StreamLoop_UDP_DrainBackward_Abstract extends StreamLoop_UDP_Abstract {
 
     public function readyRead($tsSelect) {
         // тут всегда будет как минимум две попытки чтения, поэтому to locals оправдан для всего
         $socket = $this->_socketResource;
 
         $buffer1 = '';
-        $fromAddress1 = '';
-        $fromPort = 0;
+        $fromAddress = '';
+        $fromPort = null;
 
         // --- recv #1 (must exist if select says readable) ---
         $bytes1 = socket_recvfrom(
             $socket,
             $buffer1,
-            1024,
+            1500, // UDP limit MTU
             MSG_DONTWAIT,
-            $fromAddress1,
+            $fromAddress,
             $fromPort
         );
 
@@ -33,7 +33,7 @@ abstract class StreamLoop_UDP_DrainBackward_Abstract extends StreamLoop_UDP_Drai
         $bytes2 = socket_recvfrom(
             $socket,
             $buffer2,
-            1024,
+            1500, // UDP limit MTU
             MSG_DONTWAIT,
             $fromAddress2,
             $fromPort
@@ -41,7 +41,7 @@ abstract class StreamLoop_UDP_DrainBackward_Abstract extends StreamLoop_UDP_Drai
 
         if ($bytes2 <= 0) {
             // common case: only one datagram available -> no arrays/loops
-            $this->_onReceive($tsSelect, $buffer1, $bytes1, $fromAddress1);
+            $this->_onReceive($tsSelect, $buffer1, $bytes1);
             return;
         }
 
@@ -51,19 +51,18 @@ abstract class StreamLoop_UDP_DrainBackward_Abstract extends StreamLoop_UDP_Drai
         // NB! Такой подход с отдельными массивами на 32% быстрее чем делать вложенный массив, я проверил дважды.
         $bufferArray = [$buffer1, $buffer2];
         $bytesArray = [$bytes1, $bytes2];
-        $fromAddressArray = [$fromAddress1, $fromAddress2];
 
         $found = 2;
 
         // drain up to limit:
         // start from 3 because we already have 2
-        $drainLimit = $this->_drainLimit - 2;
+        $drainLimit = 8; // 10-2 fixed
 
         do {
             $bytes1 = socket_recvfrom(
                 $socket,
                 $buffer1,
-                1024,
+                1500, // UDP limit MTU
                 MSG_DONTWAIT,
                 $fromAddress1,
                 $fromPort
@@ -72,7 +71,6 @@ abstract class StreamLoop_UDP_DrainBackward_Abstract extends StreamLoop_UDP_Drai
             if ($bytes1 > 0) {
                 $bufferArray[] = $buffer1;
                 $bytesArray[] = $bytes1;
-                $fromAddressArray[] = $fromAddress1;
                 $found ++;
             } else {
                 // end of drain
@@ -89,7 +87,6 @@ abstract class StreamLoop_UDP_DrainBackward_Abstract extends StreamLoop_UDP_Drai
                 $tsSelect,
                 $bufferArray[$found],
                 $bytesArray[$found],
-                $fromAddressArray[$found]
             );
         } while ($found);
     }

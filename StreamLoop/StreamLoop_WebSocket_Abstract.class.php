@@ -65,7 +65,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
             try {
                 for ($drainCounter = 1; $drainCounter <= 10; $drainCounter ++) {
                     $data = fread($this->stream, 16384);
-                    $length = strlen($data);
+                    $length = strlen($data); // O(1)
 
                     # debug:start
                     Cli::Print_n(__CLASS__ . ": drain=$drainCounter fread($length) $data");
