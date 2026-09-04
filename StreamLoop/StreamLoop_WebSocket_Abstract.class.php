@@ -52,7 +52,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         $this->_buffer = '';
         $this->_bufferLength = 0;
         $this->_bufferOffset = 0;
-        $this->_fragmentOpcode = null;
+        $this->_fragmentOpcode = -1;
         $this->_fragmentPayload = '';
 
         $this->_state = StreamLoop_WebSocket_Const::STATE_DISCONNECTED;
@@ -186,7 +186,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                                 Cli::Print_n(__CLASS__.': received opcode='.$opcode.' '.$payload);
                                 # debug:end
 
-                                if ($this->_fragmentOpcode === null) {
+                                if ($this->_fragmentOpcode < 0) {
                                     throw new StreamLoop_Exception(StreamLoop_WebSocket_Const::ERROR_UNKNOWN_OPCODE);
                                 }
 
@@ -195,7 +195,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                                 if ($fin) {
                                     $this->_active = true; // спец-костыль: если данные идут - похер на iframe ping-pong
                                     $this->_onReceive($tsSelect, $this->_fragmentPayload, $this->_fragmentOpcode);
-                                    $this->_fragmentOpcode = null;
+                                    $this->_fragmentOpcode = -1;
                                     $this->_fragmentPayload = '';
                                 }
                             } elseif ($opcode == 0xA) { // FRAME PONG
@@ -543,7 +543,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
     private $_readDrainLimit = 3; // default
     private $_chr126, $_chr127;
     private $_pingPeriod = 0.0; // float
-    private $_fragmentOpcode = null; // @todo -1
+    private $_fragmentOpcode = -1; // -1 это null, я так сделал чтобы не делать === потому что оно тяжелее чем ==
     private $_fragmentPayload = '';
 
 }
