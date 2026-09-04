@@ -72,7 +72,9 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
         // if-tree optimization
         if ($this->_state == StreamLoop_HTTP_Const::STATE_WAIT_FOR_RESPONSE_HEADERS) {
             // drain read headers
+            $readIndex = 0;
             do {
+                $readIndex++;
                 $line = fgets($this->stream, 4096); // я читаю через fgetS и врядли будет строка больше 4Kb
 
                 $this->_buffer .= $line;
@@ -111,74 +113,111 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
 
                     return;
                 } elseif (!$line) {
-                    // fgets может вернуть false - это или просто ничего нет в не-блок-режиме или реально EOF (не путай с fread)
-                    // то есть fgets не отличает false от пустой строки
-                    $this->_checkEOF(); // read headers - empty line
-                    break; // break цикла
+                    // Если до этого уже прочитали строки headers,
+                    // значит просто закончили drain.
+                    if ($readIndex == 1) {
+                        $this->_checkEOF($tsSelect);
+                    }
+
+                    break;
                 }
             } while (true);
         } elseif ($this->_state == StreamLoop_HTTP_Const::STATE_WAIT_FOR_RESPONSE_BODY) {
             // @todo как смержить wait for headers & body в кучу? Все равно у меня http 1.1
-            $headerArray = $this->_headerArray; // @todo
+            $headerArray = $this->_headerArray; // @todo отдельная переменная вместо массива
 
             if (isset($headerArray['content-length'])) {
-                // ровно N байт
-                $length = (int) $headerArray['content-length'];
+                $bodyLength = (int) $headerArray['content-length'];
 
-                // to locals
-                // он тут нужен потому что 2+ использование,
-                // и в случае успеха мне нужно будет все равно запоминать буфер перед вызовом reset
+                // Работаем с локальным буфером весь readyRead.
                 $buffer = $this->_buffer;
+                $this->_buffer = '';
 
-                // dynamic drain read
-                $drainIndex = 3;
-                do {
-                    $chunk = fread($this->stream, 16384); // 16k ideal for SSL
+                $bufferLength = strlen($buffer);
 
-                    // дописываемся всегда: так быстрее, потому что как правило $chunk это string или empty string.
-                    // И даже если он false - то дальше сработао проверка
-                    $buffer .= $chunk;
-
-                    if (strlen($buffer) == $length) {
-                        // надо сначала поменять состояние и все очистить,
-                        // а только потом вызывать onResponce,
-                        // потому что в onResponce я могу вызвать request снова, а там проверка на activeRequest
-                        $statusCode = $this->_statusCode; // запоминаем перед очисткой
-                        $statusMessage = $this->_statusMessage; // запоминаем перед очисткой
-
-                        $this->_reset(); // reset in wait for body
-
-                        $this->_onReceive(
-                            $tsSelect,
-                            $statusCode,
-                            $statusMessage,
-                            $headerArray,
-                            $buffer
-                        );
-
-                        // очистка буфера, потому что считали тело до конца
-                        $buffer = '';
-
-                        break;
-                    } elseif ($chunk === '') {
-                        // drain stop
-                        break;
-                    } elseif ($chunk === false) {
-                        // в неблокирующем режиме если данных нет - то будет string ''
-                        // а если false - то это ошибка чтения
-                        // например, PHP Warning: fread(): SSL: Connection reset by peer
-                        $this->_checkEOF(); // read body - empty chunk
-                        break;
-                    } elseif (strlen($chunk) < 16384) {
-                        // если длинна которую я считал меньше запрошенной - то резко на выход
-                        // и не пытаться сделать второй read
+                for ($drainIndex = 1; $drainIndex <= 10; $drainIndex++) {
+                    // Вдруг тело уже было полностью накоплено.
+                    // Также обрабатывает Content-Length: 0.
+                    if ($bufferLength >= $bodyLength) {
                         break;
                     }
-                } while (--$drainIndex);
 
-                $this->_buffer = $buffer;
+                    $chunk = fread($this->stream, 16384);
+
+                    if ($chunk === false) {
+                        $this->throwError(
+                            $tsSelect,
+                            StreamLoop_HTTP_Const::ERROR_CLOSED_BY_SERVER,
+                            'fread failed',
+                        );
+                        return;
+                    }
+
+                    $chunkLength = strlen($chunk);
+
+                    if ($chunkLength == 0) {
+                        // EOF проверяем только на первом fread после stream_select
+                        if ($drainIndex == 1) {
+                            if ($this->_checkEOF($tsSelect)) {
+                                return;
+                            }
+                        }
+
+                        // На втором+ чтении это обычный конец drain.
+                        break;
+                    }
+
+                    $buffer .= $chunk;
+                    $bufferLength += $chunkLength;
+
+                    // Ответ собран — больше fread не нужен.
+                    if ($bufferLength >= $bodyLength) {
+                        break;
+                    }
+
+                    // Для обычного TCP short read обычно означает,
+                    // что receive queue сейчас опустела.
+                    if ($chunkLength < 16384) {
+                        if (!$this->_crypto) {
+                            break;
+                        }
+                    }
+
+                    // Для SSL после short read продолжаем:
+                    // следующая TLS record уже может быть готова.
+                }
+
+                // Тело пока пришло не полностью.
+                if ($bufferLength < $bodyLength) {
+                    $this->_buffer = $buffer;
+                    return;
+                }
+
+                // В обычном случае копии здесь не будет.
+                if ($bufferLength == $bodyLength) {
+                    $body = $buffer;
+                } else {
+                    $body = substr($buffer, 0, $bodyLength);
+                }
+
+                $statusCode = $this->_statusCode;
+                $statusMessage = $this->_statusMessage;
+
+                // Сначала READY, затем пользовательский callback.
+                $this->_reset();
+
+                $this->_onReceive(
+                    $tsSelect,
+                    $statusCode,
+                    $statusMessage,
+                    $headerArray,
+                    $body
+                );
+
             } elseif (isset($headerArray['transfer-encoding']) && strpos($headerArray['transfer-encoding'], 'chunked') !== false) {
                 // ---- chunked ----
+                // тут не настолько high-performance как в non-chunked
+
                 // докачиваем сырой поток chunked-данных в _buffer
                 $drainIndex = 10;
                 do {
@@ -186,7 +225,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
                     if ($chunk === '') {
                         break;
                     } elseif ($chunk === false) {
-                        $this->_checkEOF(); // read body - false chunk
+                        $this->_checkEOF($tsSelect); // read body - false chunk
                         break;
                     }
                     $this->_buffer .= $chunk;
@@ -344,19 +383,19 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
         $this->_onError($tsSelect, $errorCode, $errorMessage);
     }
 
-    private function _checkEOF() {
+    private function _checkEOF($tsSelect) { // @todo protected
         if (feof($this->stream)) {
             // затем кидаем ошибку
             $this->throwError( // EOF
-                microtime(true),
+                $tsSelect,
                 StreamLoop_HTTP_Const::ERROR_EOF, // http code 0
                 'Connection closed by server', // ясное сообщение
             );
 
             return true;
+        } else {
+            return false;
         }
-
-        return false;
     }
 
     private function _processHandshake($tsSelect) {
@@ -382,7 +421,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
 
         // $return === 0:
         // TLS-handshake пока не завершён
-        $this->_checkEOF(); // in _processHandshake
+        $this->_checkEOF($tsSelect); // in _processHandshake
     }
 
     private function _reset($state = StreamLoop_HTTP_Const::STATE_READY) {

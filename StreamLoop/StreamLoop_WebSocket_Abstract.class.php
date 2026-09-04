@@ -381,7 +381,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         }
     }
 
-    private function _checkEOF($tsSelect) {
+    private function _checkEOF($tsSelect) { // @todo protected
         if (feof($this->stream)) {
             $this->throwError(
                 $tsSelect,
