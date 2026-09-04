@@ -62,13 +62,12 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         // if-tree optimization
         if ($this->_state == StreamLoop_WebSocket_Const::STATE_READY) {
             // счетчик чтений
-            $drainCounter = $this->_readFrameDrain;
+            $drainCounter = $this->_readDrainLimit;
 
             // to locals (оправдано)
             $buffer = $this->_buffer;
             $bufLen = $this->_bufferLength;
             $offset = $this->_bufferOffset;
-            $readFrameLength = $this->_readFrameLength;
 
             // один общий try-catch экономит до 11% cpu time если вызовов onReceive несколько
             try {
@@ -81,7 +80,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                     // я не использую stream to locals, потому что в 95% случаев чтение одно
                     // и у меня есть проверка $length < $readFrameLength - то есть я выйду сразу же и не буду
                     // пытаться сделать второй fread
-                    $data = fread($this->stream, $readFrameLength);
+                    $data = fread($this->stream, 16384);
                     $length = strlen($data);
 
                     # debug:start
@@ -238,7 +237,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                             $offset = 0;
                         }
 
-                        if ($length < $readFrameLength) {
+                        if ($length < 16384) {
                             // Если fread вернул меньше, чем запрошено - дальше не дренируем
                             break;
                         }
@@ -511,18 +510,12 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         }
     }
 
-    public function setReadFrame($length, $drain) {
-        $length = (int) $length;
+    public function setDrainLimit($drain) {
         $drain = (int) $drain;
-
-        if ($length <= 0) {
-            throw new StreamLoop_Exception("Length must be a positive integer");
-        }
         if ($drain <= 0) {
             throw new StreamLoop_Exception("Drain must be a positive integer");
         }
-        $this->_readFrameLength = $length;
-        $this->_readFrameDrain = $drain;
+        $this->_readDrainLimit = $drain;
     }
 
     public function getState() {
@@ -547,8 +540,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
     private $_bufferOffset = 0; // cursor: сколько байт уже "съели" из _buffer
     private $_state = 0; // 0 is a stop, by default
     private $_active = false; // bool, см логику idle ping @todo rf naming
-    private $_readFrameLength = 16384; // default
-    private $_readFrameDrain = 1;
+    private $_readDrainLimit = 3; // default
     private $_chr126, $_chr127;
     private $_pingPeriod = 0.0; // float
     private $_fragmentOpcode = null; // @todo -1

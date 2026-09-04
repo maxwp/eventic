@@ -131,7 +131,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
                 $buffer = $this->_buffer;
 
                 // dynamic drain read
-                $drainIndex = 10;
+                $drainIndex = 3;
                 do {
                     $chunk = fread($this->stream, 16384); // 16k ideal for SSL
 
@@ -169,7 +169,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
                         // например, PHP Warning: fread(): SSL: Connection reset by peer
                         $this->_checkEOF(); // read body - empty chunk
                         break;
-                    } elseif (strlen($chunk) < 4096) {
+                    } elseif (strlen($chunk) < 16384) {
                         // если длинна которую я считал меньше запрошенной - то резко на выход
                         // и не пытаться сделать второй read
                         break;
@@ -182,7 +182,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
                 // докачиваем сырой поток chunked-данных в _buffer
                 $drainIndex = 10;
                 do {
-                    $chunk = fread($this->stream, 4096);
+                    $chunk = fread($this->stream, 16384);
                     if ($chunk === '') {
                         break;
                     } elseif ($chunk === false) {
