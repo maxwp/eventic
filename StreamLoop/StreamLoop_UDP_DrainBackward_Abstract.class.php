@@ -7,7 +7,7 @@ abstract class StreamLoop_UDP_DrainBackward_Abstract extends StreamLoop_UDP_Abst
 
         $buffer1 = '';
         $fromAddress = '';
-        $fromPort = null;
+        $fromPort = null; // он не будет нужен
 
         // --- recv #1 (must exist if select says readable) ---
         $bytes1 = socket_recvfrom(
@@ -48,11 +48,7 @@ abstract class StreamLoop_UDP_DrainBackward_Abstract extends StreamLoop_UDP_Abst
         // --- batching case: buffer ALL and emit latest-first ---
         // push #1
         // push #2 (currently in $buffer/$fromAddress/$fromPort)
-        // NB! Такой подход с отдельными массивами на 32% быстрее чем делать вложенный массив, я проверил дважды.
         $bufferArray = [$buffer1, $buffer2];
-        $bytesArray = [$bytes1, $bytes2];
-
-        $found = 2;
 
         // drain up to limit:
         // start from 3 because we already have 2
@@ -70,8 +66,6 @@ abstract class StreamLoop_UDP_DrainBackward_Abstract extends StreamLoop_UDP_Abst
 
             if ($bytes1 > 0) {
                 $bufferArray[] = $buffer1;
-                $bytesArray[] = $bytes1;
-                $found ++;
             } else {
                 // end of drain
                 break;
@@ -80,13 +74,14 @@ abstract class StreamLoop_UDP_DrainBackward_Abstract extends StreamLoop_UDP_Abst
 
         // emit latest-first: newest datagram first
         // тут нельзя foreach, потому что бегу по элементам в обратном порядке
+        $found = count($bufferArray);
         do {
-            --$found;
+            $buffer1 = $bufferArray[--$found];
 
             $this->_onReceive(
                 $tsSelect,
-                $bufferArray[$found],
-                $bytesArray[$found],
+                $buffer1,
+                strlen($buffer1),
             );
         } while ($found);
     }
