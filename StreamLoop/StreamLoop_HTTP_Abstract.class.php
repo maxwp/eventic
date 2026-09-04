@@ -133,7 +133,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
                 // dynamic drain read
                 $drainIndex = 10;
                 do {
-                    $chunk = fread($this->stream, 4096);
+                    $chunk = fread($this->stream, 16384); // 16k ideal for SSL
 
                     // дописываемся всегда: так быстрее, потому что как правило $chunk это string или empty string.
                     // И даже если он false - то дальше сработао проверка
