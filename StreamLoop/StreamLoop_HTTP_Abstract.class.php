@@ -139,17 +139,18 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
                         return;
                     }
 
-                    $this->_state =
-                        StreamLoop_HTTP_Const::STATE_WAIT_FOR_RESPONSE_BODY;
+                    $this->_state = StreamLoop_HTTP_Const::STATE_WAIT_FOR_RESPONSE_BODY;
 
-                    // $_buffer уже пустой благодаря ownership transfer.
-                    return;
+                    $buffer = ''; // заголовки разобраны, дальше буфер нужен для тела
+                    break;        // выходим из for, продолжаем readyRead()
                 }
             }
 
             // Headers пока не закончились — сохраняем накопленное.
             $this->_buffer = $buffer;
-        } elseif ($this->_state == StreamLoop_HTTP_Const::STATE_WAIT_FOR_RESPONSE_BODY) {
+        }
+
+        if ($this->_state == StreamLoop_HTTP_Const::STATE_WAIT_FOR_RESPONSE_BODY) {
             // @todo как смержить wait for headers & body в кучу? Все равно у меня http 1.1
             $headerArray = $this->_headerArray; // @todo отдельная переменная вместо массива
 
