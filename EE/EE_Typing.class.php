@@ -48,9 +48,14 @@ class EE_Typing {
                 }
             case self::TYPE_FLOAT:
                 // @todo no preg_match
-                $value = preg_replace("/[^0-9\.\,\-]/ius", '', $value);
-                $value = str_replace(',', '.', $value);
-                return (float) $value;
+                if (is_float($value)) {
+                    // тут может быть передан float сразу в формате 1-e12
+                    return $value;
+                } else {
+                    $value = preg_replace("/[^0-9\.\,\-]/ius", '', $value);
+                    $value = str_replace(',', '.', $value);
+                    return (float)$value;
+                }
             case self::TYPE_DATE:
                 $x = strtotime($value);
                 if (!$x) {
