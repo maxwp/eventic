@@ -390,6 +390,12 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
      * @return void
      */
     public function throwError($tsSelect, $errorCode, $errorMessage = false) {
+        # debug:start
+        Cli::Print_n(__CLASS__ . ": error $errorCode " . $errorMessage);
+        # debug:end
+
+        // @todo to L TCP?
+
         $this->disconnect();
         $this->_onError($tsSelect, $errorCode, $errorMessage);
     }
