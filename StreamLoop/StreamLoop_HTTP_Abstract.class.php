@@ -344,7 +344,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
                     $this->_chunkExpected = null;
                 } while (true);
             } else {
-                throw new StreamLoop_Exception('Unsupported encoding');
+                throw new StreamLoop_Exception('Unsupported encoding '.print_r($headerArray, true));
             }
         } elseif ($this->_state == StreamLoop_HTTP_Const::STATE_HANDSHAKING) {
             $this->_processHandshake($tsSelect);
