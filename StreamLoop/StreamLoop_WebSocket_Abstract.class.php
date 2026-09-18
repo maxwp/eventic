@@ -489,6 +489,11 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         return $this->_state;
     }
 
+    // @todo универсальный isStateReady и тогда все эти const не нужны, можно будет сделать privates
+    public function isState($state) {
+        return $this->_state == $state;
+    }
+
     public function __construct(StreamLoop $loop) {
         parent::__construct($loop);
 

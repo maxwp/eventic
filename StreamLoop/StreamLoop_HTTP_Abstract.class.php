@@ -467,6 +467,10 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
         return $this->_state;
     }
 
+    public function isState($state) {
+        return $this->_state == $state;
+    }
+
     private $_buffer = ''; // string
     private $_headerArray = []; // array
     private $_statusCode = 0; // int
