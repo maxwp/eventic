@@ -485,21 +485,14 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         }
     }
 
-    public function getState() {
-        return $this->_state;
-    }
-
-    // @todo универсальный isStateReady и тогда все эти const не нужны, можно будет сделать privates
-    public function isState($state) {
-        return $this->_state == $state;
-    }
-
     public function __construct(StreamLoop $loop) {
         parent::__construct($loop);
 
         $this->_chr126 = chr(0x80 | 126);
         $this->_chr127 = chr(0x80 | 127);
     }
+
+    use FSM_Trait;
 
     private $_writeArray = [];
     /**
@@ -508,7 +501,6 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
     private $_headerArray = [];
     private $_path = ''; // string
     private $_buffer = ''; // string
-    private $_state = 0; // 0 is a stop, by default
     private $_active = false; // bool, см логику idle ping @todo rf naming
     private $_chr126, $_chr127;
     private $_pingPeriod = 0.0; // float

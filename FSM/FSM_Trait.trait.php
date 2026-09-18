@@ -1,17 +1,12 @@
 <?php
 trait FSM_Trait {
 
-    private function _updateState($state) {
-        $this->_state = $state;
-    }
-
-    private function _updateStateCallback($state, $callback) {
-        $this->_state = $state;
-        $callback();
-    }
-
     public function getState() {
         return $this->_state;
+    }
+
+    public function isState($state) {
+        return $this->_state == $state;
     }
 
     private $_state;

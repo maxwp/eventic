@@ -46,6 +46,8 @@ ClassLoader::Get()->registerClassArray([
 
     __DIR__.'/Validator/Validator.class.php',
 
+    __DIR__.'/FSM/FSM_Trait.trait.php',
+
     __DIR__.'/Connection/Connection.class.php',
     __DIR__.'/Connection/Connection_IConnection.class.php',
     __DIR__.'/Connection/Connection_IDatabaseAdapter.class.php',

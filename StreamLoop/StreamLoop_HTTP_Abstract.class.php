@@ -463,19 +463,12 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
         $this->_loop->resetHandler($this);
     }
 
-    public function getState() {
-        return $this->_state;
-    }
-
-    public function isState($state) {
-        return $this->_state == $state;
-    }
+    use FSM_Trait;
 
     private $_buffer = ''; // string
     private $_headerArray = []; // array
     private $_statusCode = 0; // int
     private $_statusMessage = ''; // string
-    private $_state = 0; // int, 0 is STATE_DISCONNECTED, by default disconnected
     private $_chunkExpected = null; // int|null, сколько байт данных ждем в текущем чанке
     private $_bodyDecoded = ''; // сюда складываем уже декодированное тело (без chunk-обвязки)
 

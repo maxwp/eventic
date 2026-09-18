@@ -149,11 +149,6 @@ abstract class StreamLoop_TCP_Abstract extends StreamLoop_Handler_Abstract {
         return $this->_sourcePort;
     }
 
-    // @todo перенести getState/checkState сюда не так-то и просто, потому что тогда _state надо будет сделать protected,
-    //       а этого не хочу. Поэтому надо сделать FSM trait.
-    abstract public function getState();
-    abstract public function isState($state); // bool
-
     private $_destinationHost; // string
     private $_destinationPort; // int
     private $_destinationIP = false; // string
