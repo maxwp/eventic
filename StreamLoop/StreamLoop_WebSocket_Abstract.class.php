@@ -475,6 +475,8 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
     private function _encodeMessage($data, $opcode = 1) {
         $length = strlen($data);
 
+        // @todo можно кешировать chr opcode
+
         if ($length <= 125) {
             return chr(0x80 | $opcode) . chr(0x80 | $length)."\x00\x00\x00\x00".$data;
         } elseif ($length <= 0xFFFF) {
@@ -490,6 +492,10 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
 
         $this->_chr126 = chr(0x80 | 126);
         $this->_chr127 = chr(0x80 | 127);
+    }
+
+    public function isStateReady() {
+        return $this->_state == StreamLoop_WebSocket_Const::STATE_READY;
     }
 
     use FSM_Trait;
