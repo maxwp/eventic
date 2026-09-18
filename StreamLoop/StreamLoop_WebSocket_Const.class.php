@@ -1,23 +1,12 @@
 <?php
 final class StreamLoop_WebSocket_Const  {
 
-    // states:
-    public const STATE_DISCONNECTED = 0;
-    public const STATE_CONNECTING = 1;
-    public const STATE_HANDSHAKING = 2;
+    // states
     public const STATE_UPGRADING = 3;
-    public const STATE_READY = 4;
 
-    // errors:
-    public const ERROR_EOF = 1;
-    public const ERROR_HANDSHAKE = 2; // SSL HANDSHAKE error
+    // errors
     public const ERROR_NO_PONG = 3;
     public const ERROR_UPGRADE = 4;
-    public const ERROR_FRAME_CLOSED = 5;
-    public const ERROR_USER = 6;
-    public const ERROR_RESET_BY_PEER = 7;
-    public const ERROR_TIMEOUT = 8; // any timeout: including connecting, handshaking, upgrading, ...
     public const ERROR_UNKNOWN_OPCODE = 9;
-    public const ERROR_RESTART = -1;
 
 }

@@ -9,14 +9,7 @@
  */
 abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
 
-    // @todo как слепить в кучу websocket over https?
-    // @todo сначала надо придумать как сделать StateMachine, чтобы я мог помещать команду с событиями onXXX,
-    //       и затем handshake и switching protocol снанут этими командами
-
-    abstract protected function _beforeConnect();
     abstract protected function _onReceive($tsSelect, $payload, $opcode);
-    abstract protected function _onError($tsSelect, $errorCode, $errorMessage);
-    abstract protected function _onReady($tsSelect);
 
     protected function _updateUpgradeParams($path, $headerArray = [], $writeArray = []) {
         $this->_path = $path;
@@ -33,7 +26,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         $this->_createAndConnectTCP();
 
         // state меняем после createAndConnectTCP, потому он может кинуть exception и всему пизда, а state будет connecting
-        $this->_state = StreamLoop_WebSocket_Const::STATE_CONNECTING;
+        $this->_state = StreamLoop_TCP_Const::STATE_CONNECTING;
 
         // на каждый connect новый период пинга
         $this->_pingPeriod = 10.01 + rand() % 5;
@@ -51,12 +44,12 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         $this->_fragmentOpcode = -1;
         $this->_fragmentPayload = '';
 
-        $this->_state = StreamLoop_WebSocket_Const::STATE_DISCONNECTED;
+        $this->_state = StreamLoop_TCP_Const::STATE_DISCONNECTED;
     }
 
     public function readyRead($tsSelect) {
         // if-tree optimization
-        if ($this->_state == StreamLoop_WebSocket_Const::STATE_READY) {
+        if ($this->_state == StreamLoop_TCP_Const::STATE_READY) {
             $buffer = $this->_buffer;
             $bufLen = strlen($buffer); // O(1)
             $offset = 0;
@@ -198,7 +191,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                                 Cli::Print_n(__CLASS__ . ": sent frame-pong $payload");
                                 # debug:end
                             } elseif ($opcode == 0x8) { // FRAME CLOSED
-                                throw new StreamLoop_Exception(StreamLoop_WebSocket_Const::ERROR_FRAME_CLOSED);
+                                throw new StreamLoop_Exception(StreamLoop_TCP_Const::ERROR_CLOSED);
                             } else {
                                 throw new StreamLoop_Exception(StreamLoop_WebSocket_Const::ERROR_UNKNOWN_OPCODE);
                             }
@@ -238,7 +231,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                         // а если false - то это ошибка чтения
                         // например, PHP Warning: fread(): SSL: Connection reset by peer
                         //$errorString = error_get_last()['message'];
-                        throw new StreamLoop_Exception(StreamLoop_WebSocket_Const::ERROR_RESET_BY_PEER);
+                        throw new StreamLoop_Exception(StreamLoop_TCP_Const::ERROR_CLOSED);
                     }
                 }
 
@@ -253,15 +246,15 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                 return;
             } catch (Exception $ue) {
                 // тут вылетаем, но надо сделать disconnect
-                $this->throwError($tsSelect, StreamLoop_WebSocket_Const::ERROR_USER, $ue->getMessage());
+                $this->throwError($tsSelect, StreamLoop_TCP_Const::ERROR_USER, $ue->getMessage());
                 return;
             } catch (Throwable $te) {
                 // более жесткая ошибка
-                $this->throwError($tsSelect, StreamLoop_WebSocket_Const::ERROR_USER, $te->getMessage());
+                $this->throwError($tsSelect, StreamLoop_TCP_Const::ERROR_USER, $te->getMessage());
                 return;
             }
 
-        } elseif ($this->_state == StreamLoop_WebSocket_Const::STATE_HANDSHAKING) {
+        } elseif ($this->_state == StreamLoop_TCP_Const::STATE_HANDSHAKING) {
             $this->_processHandshake($tsSelect);
         } elseif ($this->_state == StreamLoop_WebSocket_Const::STATE_UPGRADING) {
             $this->_checkUpgrade($tsSelect);
@@ -270,7 +263,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
 
     public function readyWrite($tsSelect) {
         switch ($this->_state) {
-            case StreamLoop_WebSocket_Const::STATE_CONNECTING:
+            case StreamLoop_TCP_Const::STATE_CONNECTING:
                 if ($this->_crypto) {
                     // коннект установился, я готов к записи
                     $host = $this->getDestinationHost(); // to locals: 2+
@@ -285,7 +278,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                         ],
                     ]);
 
-                    $this->_state = StreamLoop_WebSocket_Const::STATE_HANDSHAKING;
+                    $this->_state = StreamLoop_TCP_Const::STATE_HANDSHAKING;
 
                     // NB! НЕ ставим write, потому что во время handshaking всегда идет write и просто зайобка CPU, я проверял
                     $this->_loop->updateHandlerFlags($this, true, false); // connecting done -> handshaking
@@ -296,7 +289,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                     $this->_startUpgrade($tsSelect);
                 }
                 return;
-            case StreamLoop_WebSocket_Const::STATE_HANDSHAKING:
+            case StreamLoop_TCP_Const::STATE_HANDSHAKING:
                 $this->_processHandshake($tsSelect);
                 return;
             case StreamLoop_WebSocket_Const::STATE_UPGRADING:
@@ -319,7 +312,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
          * плюс я отказываюсь от переменных ping intrval чтобы их не запрашивать все время.
          */
 
-        if ($this->_state == StreamLoop_WebSocket_Const::STATE_READY) {
+        if ($this->_state == StreamLoop_TCP_Const::STATE_READY) {
             // в состоянии READY может прилететь timeout только ради ping
             if ($this->_active) {
                 $this->_active = false;
@@ -337,7 +330,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         } else {
             // во всех остальных случаях я нарвался на проблему что за timeout я не смог установить соединение и сделать handshake/upgrade
             // (то есть не успел аж до ready)
-            $this->throwError($tsSelect, StreamLoop_WebSocket_Const::ERROR_TIMEOUT);
+            $this->throwError($tsSelect, StreamLoop_TCP_Const::ERROR_TIMEOUT);
         }
     }
 
@@ -356,7 +349,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                         $this->writeMulti($this->_writeArray);
                     }
 
-                    $this->_state = StreamLoop_WebSocket_Const::STATE_READY;
+                    $this->_state = StreamLoop_TCP_Const::STATE_READY;
 
                     // таймер двигаем вперед на 10-15 сек
                     $this->_loop->updateStreamTimeout($this->streamID, $tsSelect + $this->_pingPeriod); // upgrading done -> ready with iframe-layer ping-pong
@@ -415,7 +408,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         if ($return === true) {
             $this->_startUpgrade($tsSelect);
         } elseif ($return === false) {
-            $this->throwError($tsSelect, StreamLoop_WebSocket_Const::ERROR_HANDSHAKE);
+            $this->throwError($tsSelect, StreamLoop_TCP_Const::ERROR_HANDSHAKE);
         }
     }
 
@@ -443,7 +436,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         } catch (Throwable $te) {
             $this->throwError(
                 microtime(true),
-                StreamLoop_WebSocket_Const::ERROR_EOF,
+                StreamLoop_TCP_Const::ERROR_CLOSED,
                 $te->getMessage()
             );
         }
@@ -466,7 +459,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         } catch (Throwable $te) {
             $this->throwError(
                 microtime(true),
-                StreamLoop_WebSocket_Const::ERROR_EOF,
+                StreamLoop_TCP_Const::ERROR_CLOSED,
                 $te->getMessage()
             );
         }
@@ -495,7 +488,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
     }
 
     public function isStateReady() {
-        return $this->_state == StreamLoop_WebSocket_Const::STATE_READY;
+        return $this->_state == StreamLoop_TCP_Const::STATE_READY;
     }
 
     use FSM_Trait;

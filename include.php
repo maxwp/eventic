@@ -228,6 +228,7 @@ ClassLoader::Get()->registerClass(__DIR__.'/MailQue/MailQue_Exception.class.php'
 //ClassLoader::Get()->registerClass(__DIR__.'/SQLBuilder/SQLBuilder_AQuery.class.php');
 //ClassLoader::Get()->registerClass(__DIR__.'/SQLBuilder/SQLBuilder_Select.class.php');
 
+include __DIR__.'/StreamLoop/StreamLoop_TCP_Const.class.php';
 include __DIR__.'/StreamLoop/StreamLoop_HTTP_Const.class.php';
 include __DIR__.'/StreamLoop/StreamLoop_WebSocket_Const.class.php';
 

@@ -1,13 +1,10 @@
 <?php
 abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
 
-    abstract protected function _beforeConnect();
     abstract protected function _onReceive($tsSelect, $statusCode, $statusMessage, $headerArray, $body);
-    abstract protected function _onError($tsSelect, $errorCode, $errorMessage);
-    abstract protected function _onReady($tsSelect); // @todo переделать на FSM Events?
 
     public function write($method, $path, $body, $headerArray, $timeoutTo) {
-        if ($this->_state == StreamLoop_HTTP_Const::STATE_READY) {
+        if ($this->_state == StreamLoop_TCP_Const::STATE_READY) {
             $request = $method . ' ' . $path . " HTTP/1.1\r\nHost: ".$this->getDestinationHost()."\r\nConnection: keep-alive\r\n" . implode("\r\n", $headerArray)."\r\n";
 
             // @todo упростить
@@ -26,7 +23,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
             } else {
                 $this->throwError( // closed by server / reset by peer
                     microtime(true), // tsSelect
-                    StreamLoop_HTTP_Const::ERROR_CLOSED_BY_SERVER, // http code 0
+                    StreamLoop_TCP_Const::ERROR_CLOSED,
                     'Connection closed by server', // ясное сообщение
                 );
             }
@@ -41,8 +38,9 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
 
         $this->_createAndConnectTCP();
 
+        // @todo я бы мог state запихнуть в TCP, но тогда он станет protected
         // state меняем ТОЛЬКО createAndConnect, потому что он может выкинуть exeption и мне нельзя остаться в state connecting
-        $this->_state = StreamLoop_HTTP_Const::STATE_CONNECTING; // in 1st connect
+        $this->_state = StreamLoop_TCP_Const::STATE_CONNECTING; // in 1st connect
     }
 
     private function _completeConnect($tsSelect) {
@@ -56,7 +54,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
     public function disconnect() {
         if ($this->streamID) { // этот if - защита от double disconnect: вдруг сработает read, а потом write и в нем я disconnected
             // reset сам сделает updateHandler в ноль
-            $this->_reset(StreamLoop_HTTP_Const::STATE_DISCONNECTED); // reset in disconnect
+            $this->_reset(StreamLoop_TCP_Const::STATE_DISCONNECTED); // reset in disconnect
             $this->_loop->unregisterHandler($this); // важно: disconnect снимает регистрацию handler'a
         }
 
@@ -175,7 +173,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
                     if ($chunk === false) {
                         $this->throwError(
                             $tsSelect,
-                            StreamLoop_HTTP_Const::ERROR_CLOSED_BY_SERVER,
+                            StreamLoop_TCP_Const::ERROR_CLOSED,
                             'fread failed',
                         );
                         return;
@@ -346,14 +344,14 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
             } else {
                 throw new StreamLoop_Exception('Unsupported encoding '.print_r($headerArray, true));
             }
-        } elseif ($this->_state == StreamLoop_HTTP_Const::STATE_HANDSHAKING) {
+        } elseif ($this->_state == StreamLoop_TCP_Const::STATE_HANDSHAKING) {
             $this->_processHandshake($tsSelect);
         }
     }
 
     public function readyWrite($tsSelect) {
         // if-tree optimization
-        if ($this->_state == StreamLoop_HTTP_Const::STATE_CONNECTING) {
+        if ($this->_state == StreamLoop_TCP_Const::STATE_CONNECTING) {
             // TCP-соединение установлено
             // коннект установился, я готов к записи
             if ($this->_crypto) {
@@ -369,7 +367,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
                     ],
                 ]);
 
-                $this->_state = StreamLoop_HTTP_Const::STATE_HANDSHAKING; // handshake starting
+                $this->_state = StreamLoop_TCP_Const::STATE_HANDSHAKING; // handshake starting
 
                 // NB! НЕ ставим write, потому что во время handshaking всегда идет write и просто зайобка
                 $this->_loop->updateHandlerFlags($this, true, false); // connected done -> waiting for SSL handshake
@@ -380,7 +378,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
                 // HTTP без TLS: после TCP-connect сразу готовы
                 $this->_completeConnect($tsSelect);
             }
-        } elseif ($this->_state == StreamLoop_HTTP_Const::STATE_HANDSHAKING) {
+        } elseif ($this->_state == StreamLoop_TCP_Const::STATE_HANDSHAKING) {
             $this->_processHandshake($tsSelect);
         }
     }
@@ -392,9 +390,9 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
 
         // важно: readySelectTimeout не может вызваться если timeout не настал, поэтому никаких проверок на timeout'ы тут просто делать не надо.
 
-        $this->throwError( // timeout 408
+        $this->throwError( // timeout
             $tsSelect,
-            StreamLoop_HTTP_Const::ERROR_TIMEOUT,
+            StreamLoop_TCP_Const::ERROR_TIMEOUT,
         );
     }
 
@@ -431,7 +429,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
         } elseif ($return === false) {
             $this->throwError( // handshake
                 $tsSelect,
-                StreamLoop_HTTP_Const::ERROR_HANDSHAKE,
+                StreamLoop_TCP_Const::ERROR_HANDSHAKE,
                 'Failed to setup SSL'
             );
 
@@ -443,7 +441,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
         $this->_checkEOF($tsSelect); // in _processHandshake
     }
 
-    private function _reset($state = StreamLoop_HTTP_Const::STATE_READY) {
+    private function _reset($state = StreamLoop_TCP_Const::STATE_READY) {
         // чистка всего перед новым запросом или отключением
         $this->_buffer = '';
         $this->_statusCode = 0;
@@ -464,7 +462,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
     }
 
     public function isStateReady() {
-        return $this->_state == StreamLoop_HTTP_Const::STATE_READY;
+        return $this->_state == StreamLoop_TCP_Const::STATE_READY;
     }
 
     use FSM_Trait;

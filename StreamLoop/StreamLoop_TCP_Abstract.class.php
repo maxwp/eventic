@@ -1,6 +1,10 @@
 <?php
 abstract class StreamLoop_TCP_Abstract extends StreamLoop_Handler_Abstract {
 
+    abstract protected function _beforeConnect();
+    abstract protected function _onError($tsSelect, $errorCode, $errorMessage);
+    abstract protected function _onReady($tsSelect); // @todo переделать на FSM Events?
+
     protected function _createAndConnectTCP() {
         # debug:start
         Cli::Print_n(__CLASS__." connecting to {$this->_destinationHost} ip={$this->_destinationIP} port={$this->_destinationPort} bind={$this->_sourceIP}:{$this->_sourcePort} crypto={$this->_crypto}");
@@ -48,8 +52,8 @@ abstract class StreamLoop_TCP_Abstract extends StreamLoop_Handler_Abstract {
         if (feof($this->stream)) {
             $this->throwError(
                 $tsSelect,
-                StreamLoop_WebSocket_Const::ERROR_EOF,
-                json_encode(stream_get_meta_data($this->stream)),
+                StreamLoop_TCP_Const::ERROR_CLOSED,
+                json_encode(stream_get_meta_data($this->stream)), // @todo может быть сильно тяжелое
             );
             return true;
         } else {
