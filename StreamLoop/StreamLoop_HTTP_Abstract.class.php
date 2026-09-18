@@ -461,12 +461,6 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
         $this->_loop->resetHandler($this);
     }
 
-    public function isStateReady() {
-        return $this->_state == StreamLoop_TCP_Const::STATE_READY;
-    }
-
-    use FSM_Trait;
-
     private $_buffer = ''; // string
     private $_headerArray = []; // array
     private $_statusCode = 0; // int

@@ -9,6 +9,6 @@ trait FSM_Trait {
         return $this->_state == $state;
     }
 
-    private $_state;
+    protected $_state;
 
 }

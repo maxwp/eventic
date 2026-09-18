@@ -153,6 +153,16 @@ abstract class StreamLoop_TCP_Abstract extends StreamLoop_Handler_Abstract {
         return $this->_sourcePort;
     }
 
+    public function isStateReady() {
+        return $this->_state == StreamLoop_TCP_Const::STATE_READY;
+    }
+
+    public function isStateDisconnected() {
+        return $this->_state == StreamLoop_TCP_Const::STATE_DISCONNECTED;
+    }
+
+    use FSM_Trait;
+
     private $_destinationHost; // string
     private $_destinationPort; // int
     private $_destinationIP = false; // string

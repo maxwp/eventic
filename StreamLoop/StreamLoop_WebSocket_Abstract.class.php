@@ -487,12 +487,6 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         $this->_chr127 = chr(0x80 | 127);
     }
 
-    public function isStateReady() {
-        return $this->_state == StreamLoop_TCP_Const::STATE_READY;
-    }
-
-    use FSM_Trait;
-
     private $_writeArray = [];
     /**
      * @var array<string>
