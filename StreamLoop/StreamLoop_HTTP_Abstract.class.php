@@ -4,17 +4,15 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
     abstract protected function _onReceive($tsSelect, $statusCode, $statusMessage, $headerArray, $body);
 
     public function write($method, $path, $body, $headerArray, $timeoutTo) {
-        // @todo сколько времени занимает это все? = 2.5-3 us полный круг
+        // @todo 2.5-3 us полный круг
 
         if ($this->_state == StreamLoop_TCP_Const::STATE_READY) {
-            // @todo это формирование занимает 0.3 us
-            $request = $method . ' ' . $path . " HTTP/1.1\r\nHost: ".$this->getDestinationHost()."\r\nConnection: keep-alive\r\n" . implode("\r\n", $headerArray)."\r\n";
-
-            // @todo упростить общий if
-            if ($body != '') { // чаще body есть
-                $request .= 'Content-Length: ' . strlen($body) . "\r\n\r\n" . $body;
+            // @todo есть баг что если пустой headerArray - то я отправлю \r\n
+            // @todo надо переходить на headerString
+            if ($body != '') {
+                $request = $method . ' ' . $path . " HTTP/1.1\r\nHost: ".$this->getDestinationHost()."\r\nConnection: keep-alive\r\n" . implode("\r\n", $headerArray)."\r\n".'Content-Length: ' . strlen($body) . "\r\n\r\n" . $body;
             } else {
-                $request .= "\r\n";
+                $request = $method . ' ' . $path . " HTTP/1.1\r\nHost: ".$this->getDestinationHost()."\r\nConnection: keep-alive\r\n" . implode("\r\n", $headerArray)."\r\n\r\n";
             }
 
             if (fwrite($this->stream, $request)) { // это не совсем верная проверка, но для коротких payload пойдет
@@ -22,10 +20,10 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
                 // timeout на запрос есть всегда, по дефолту это 10 сек (см код выше)
                 $this->_state = StreamLoop_HTTP_Const::STATE_WAIT_FOR_RESPONSE_HEADERS; // new request sent
 
-                // @todo to locals
+                $loop = $this->_loop; // to locals
                 // @todo хитрый метод updateHandlerFlagsR, который быстрее делает то же самое
-                $this->_loop->updateHandlerFlags($this, true, false); // request sent -> waiting for headers
-                $this->_loop->updateStreamTimeout($this->streamID, $timeoutTo); // request sent -> waiting for headers
+                $loop->updateHandlerFlags($this, true, false); // request sent -> waiting for headers
+                $loop->updateStreamTimeout($this->streamID, $timeoutTo); // request sent -> waiting for headers
             } else {
                 $this->throwError( // closed by server / reset by peer
                     microtime(true), // tsSelect

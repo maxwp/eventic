@@ -175,7 +175,12 @@ class StreamLoop {
         }
 
         // обновляем rw флаг
-        if ($this->_selectReadArray) {
+        // специальный хак: использую локальные переменные 1st
+        if ($flagRead) {
+            $this->_rwFlag = true;
+        } elseif ($flagWrite) {
+            $this->_rwFlag = true;
+        } elseif ($this->_selectReadArray) {
             $this->_rwFlag = true;
         } elseif ($this->_selectWriteArray) {
             $this->_rwFlag = true;
