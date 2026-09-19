@@ -21,8 +21,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
                 $this->_state = StreamLoop_HTTP_Const::STATE_WAIT_FOR_RESPONSE_HEADERS; // new request sent
 
                 $loop = $this->_loop; // to locals
-                // @todo хитрый метод updateHandlerFlagsR, который быстрее делает то же самое
-                $loop->updateHandlerFlags($this, true, false); // request sent -> waiting for headers
+                $loop->updateHandlerFlagsR($this); // request sent -> waiting for headers
                 $loop->updateStreamTimeout($this->streamID, $timeoutTo); // request sent -> waiting for headers
             } else {
                 $this->throwError( // closed by server / reset by peer
@@ -374,7 +373,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
                 $this->_state = StreamLoop_TCP_Const::STATE_HANDSHAKING; // handshake starting
 
                 // NB! НЕ ставим write, потому что во время handshaking всегда идет write и просто зайобка
-                $this->_loop->updateHandlerFlags($this, true, false); // connected done -> waiting for SSL handshake
+                $this->_loop->updateHandlerFlagsR($this); // connected done -> waiting for SSL handshake
 
                 // и сразу же проверяем его, вдруг подключился
                 $this->_processHandshake($tsSelect);

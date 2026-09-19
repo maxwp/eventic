@@ -189,6 +189,30 @@ class StreamLoop {
         }
     }
 
+    public function updateHandlerFlagsR(StreamLoop_Handler_Abstract $handler) {
+        // to locals
+        $streamID = $handler->streamID;
+
+        // read true, write false
+        $this->_selectReadArray[$streamID] = $handler->stream;
+        unset($this->_selectWriteArray[$streamID]);
+
+        // обновляем rw флаг
+        $this->_rwFlag = true;
+    }
+
+    public function updateHandlerFlagsW(StreamLoop_Handler_Abstract $handler) {
+        // to locals
+        $streamID = $handler->streamID;
+
+        // read false, write true
+        unset($this->_selectReadArray[$streamID]);
+        $this->_selectWriteArray[$streamID] = $handler->stream;
+
+        // обновляем rw флаг
+        $this->_rwFlag = true;
+    }
+
     /**
      * Задать приоритет handler'a: по этому приоритету будут сортироваться массивы для select()
      * Чем больше число - тем приоритет первее.

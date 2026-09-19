@@ -281,7 +281,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                     $this->_state = StreamLoop_TCP_Const::STATE_HANDSHAKING;
 
                     // NB! НЕ ставим write, потому что во время handshaking всегда идет write и просто зайобка CPU, я проверял
-                    $this->_loop->updateHandlerFlags($this, true, false); // connecting done -> handshaking
+                    $this->_loop->updateHandlerFlagsR($this); // connecting done -> handshaking
 
                     $this->_processHandshake($tsSelect);
                 } else {
@@ -402,7 +402,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         );
 
         $this->_state = StreamLoop_WebSocket_Const::STATE_UPGRADING;
-        $this->_loop->updateHandlerFlags($this, true, false); // handshaking done -> upgrading
+        $this->_loop->updateHandlerFlagsR($this); // handshaking done -> upgrading
 
         $this->_checkUpgrade($tsSelect);
     }
