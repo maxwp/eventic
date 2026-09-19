@@ -232,7 +232,7 @@ class StreamLoop {
      * @throws StreamLoop_Exception
      */
     public function resetHandler(StreamLoop_Handler_Abstract $handler) {
-        // @todo это почти unregisterHandler - может заменить на него? это усложнит HTTP handler, ему тогда надо будет дергать regiser
+        // @todo это почти unregisterHandler - может заменить на него? это усложнит HTTP handler, ему тогда надо будет дергать register
 
         // to locals
         $streamID = $handler->streamID;

@@ -4,10 +4,13 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
     abstract protected function _onReceive($tsSelect, $statusCode, $statusMessage, $headerArray, $body);
 
     public function write($method, $path, $body, $headerArray, $timeoutTo) {
+        // @todo сколько времени занимает это все? = 2.5-3 us полный круг
+
         if ($this->_state == StreamLoop_TCP_Const::STATE_READY) {
+            // @todo это формирование занимает 0.3 us
             $request = $method . ' ' . $path . " HTTP/1.1\r\nHost: ".$this->getDestinationHost()."\r\nConnection: keep-alive\r\n" . implode("\r\n", $headerArray)."\r\n";
 
-            // @todo упростить
+            // @todo упростить общий if
             if ($body != '') { // чаще body есть
                 $request .= 'Content-Length: ' . strlen($body) . "\r\n\r\n" . $body;
             } else {
@@ -15,9 +18,12 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
             }
 
             if (fwrite($this->stream, $request)) { // это не совсем верная проверка, но для коротких payload пойдет
+                // @todo этот блок занимает 0.4-0.7 us (хули?)
                 // timeout на запрос есть всегда, по дефолту это 10 сек (см код выше)
                 $this->_state = StreamLoop_HTTP_Const::STATE_WAIT_FOR_RESPONSE_HEADERS; // new request sent
 
+                // @todo to locals
+                // @todo хитрый метод updateHandlerFlagsR, который быстрее делает то же самое
                 $this->_loop->updateHandlerFlags($this, true, false); // request sent -> waiting for headers
                 $this->_loop->updateStreamTimeout($this->streamID, $timeoutTo); // request sent -> waiting for headers
             } else {
@@ -394,25 +400,6 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
             $tsSelect,
             StreamLoop_TCP_Const::ERROR_TIMEOUT,
         );
-    }
-
-    /**
-     * Disconnect + onError
-     *
-     * @param $tsSelect
-     * @param $message
-     * @param $errorMessage
-     * @return void
-     */
-    public function throwError($tsSelect, $errorCode, $errorMessage = false) {
-        # debug:start
-        Cli::Print_n(__CLASS__ . ": error $errorCode " . $errorMessage);
-        # debug:end
-
-        // @todo to L TCP?
-
-        $this->disconnect();
-        $this->_onError($tsSelect, $errorCode, $errorMessage);
     }
 
     private function _processHandshake($tsSelect) {

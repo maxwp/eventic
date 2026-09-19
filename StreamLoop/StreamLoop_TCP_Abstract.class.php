@@ -1,9 +1,12 @@
 <?php
 abstract class StreamLoop_TCP_Abstract extends StreamLoop_Handler_Abstract {
 
+    abstract public function connect();
+    abstract public function disconnect();
+    // events:
     abstract protected function _beforeConnect();
-    abstract protected function _onError($tsSelect, $errorCode, $errorMessage);
     abstract protected function _onReady($tsSelect); // @todo переделать на FSM Events?
+    abstract protected function _onError($tsSelect, $errorCode, $errorMessage);
 
     protected function _createAndConnectTCP() {
         # debug:start
@@ -46,6 +49,23 @@ abstract class StreamLoop_TCP_Abstract extends StreamLoop_Handler_Abstract {
             // критическая ошибка — завершаем
             throw new StreamLoop_Exception("TCP connect failed immediately: $errstr ($errno)");
         }
+    }
+
+    /**
+     * Disconnect + onError
+     *
+     * @param $tsSelect
+     * @param $errorCode
+     * @param $errorMessage
+     * @return void
+     */
+    public function throwError($tsSelect, $errorCode, $errorMessage = false) {
+        # debug:start
+        Cli::Print_n(__CLASS__ . ": error $errorCode " . $errorMessage);
+        # debug:end
+
+        $this->disconnect();
+        $this->_onError($tsSelect, $errorCode, $errorMessage);
     }
 
     protected function _checkEOF($tsSelect) {
