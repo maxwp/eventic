@@ -22,6 +22,12 @@ class StreamLoop {
 
         // event loop из сами залуп
         do {
+            // если есть flag dirty - то вычисляем ближайший timeout
+            if ($this->_selectTimeoutToMinDirty) {
+                $this->_selectTimeoutToMin = min($this->_selectTimeoutToArray);
+                $this->_selectTimeoutToMinDirty = false;
+            }
+
             if ($this->_rwFlag) {
                 $r = $this->_selectReadArray;
                 $w = $this->_selectWriteArray;
@@ -119,7 +125,7 @@ class StreamLoop {
         );
 
         // так как я дропнул handler - то надо точно пересчитывать ближайший тайм-аут
-        $this->_selectTimeoutToMin = min($this->_selectTimeoutToArray);
+        $this->_selectTimeoutToMinDirty = true;
 
         if ($this->_selectReadArray) {
             $this->_rwFlag = true;
@@ -279,7 +285,7 @@ class StreamLoop {
         );
 
         $this->_priorityArray[$streamID] = 0; // init
-        $this->_selectTimeoutToMin = min($this->_selectTimeoutToArray);
+        $this->_selectTimeoutToMinDirty = true;
 
         // обновляем rw флаг
         if ($this->_selectReadArray) {
@@ -316,7 +322,7 @@ class StreamLoop {
         // если timeoutto меньше - то используем его; иначе пересчитываем
         // if-tree-optimization: обычно timeout увеличивается, а не уменьшается, поэтому if (true) первое
         if ($timeoutTo > $this->_selectTimeoutToMin) {
-            $this->_selectTimeoutToMin = min($this->_selectTimeoutToArray);
+            $this->_selectTimeoutToMinDirty = true;
         } else {
             $this->_selectTimeoutToMin = $timeoutTo;
         }
@@ -339,5 +345,6 @@ class StreamLoop {
         0 => 0, // костыль для priority sorting, потому что он сортирует timeoutArray тоже
     ];
     private $_selectTimeoutToMin = PHP_FLOAT_MAX; // float
+    private $_selectTimeoutToMinDirty = false; // bool
 
 }
