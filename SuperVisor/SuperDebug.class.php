@@ -12,7 +12,7 @@ class SuperDebug extends EE_Content_Abstract_Cli {
             $this->print_t($key);
             $this->print_t($a['className']);
             $this->print_n();
-            
+
             $this->print_t(json_encode($a['argumentArray']));
             $this->print_n();
             $this->print_n();
