@@ -11,17 +11,21 @@
  */
 class Cron extends Pattern_ASingleton {
 
-    public function add($className, $argumentArray = [], $uniquePID = false, $logFile = false) {
-        // @todo main-style
+    public function add($className, $argumentArray = [], $uniquePID = false, $priority = Cron_Priority_Const::PRIORITY_DEFAULT, $logFile = false) {
         if (!is_subclass_of($className, EE_Content_Abstract::class)) {
-            throw new Exception("Class $className does not extend EE_AContent");
+            throw new Exception("Class $className is not subclass of EE_Content_Abstract");
+        } elseif ($priority > +10) {
+            throw new Exception("Priority must be between -10 and 10");
+        } elseif ($priority < -10) {
+            throw new Exception("Priority must be between -10 and 10");
         }
 
         $data = [
             'classname' => $className,
             'argumentArray' => $argumentArray,
             'pid' => $uniquePID,
-            'logFile' => $logFile,
+            'priority' => $priority,
+            'log' => $logFile,
         ];
 
         $result = $this->_redis->sAdd('cron', json_encode($data));
@@ -36,33 +40,42 @@ class Cron extends Pattern_ASingleton {
         while ($file = $this->_redis->sPop('cron')) {
             $data = json_decode($file, true);
 
-            $pid = $data['pid'];
-            $logFile = $data['logFile'];
-
             $command = $this->_makeCommand($data);
 
-            // строим имя pid'a если его нет
+            // имя pid-файла
+            $pid = $data['pid'];
             if (!$pid) {
-                $pid = hash('fnv1a64', $command);
-            }
-            if (!str_contains($pid, '.pid')) {
+                $pid = hash('fnv1a64', $command).'.pid';
+            } elseif (!str_contains($pid, '.pid')) {
                 $pid .= '.pid';
             }
 
-            if ($logFile) {
-                $logString = ">> $dirpath/log/$logFile 2>&1 &";
+            // только если приоритет для nice задан
+            $priority = $data['priority'] ?? 0;
+            if ($priority) {
+                $priorityString = '/usr/bin/nice -n ' . $priority.' ';
+            } else {
+                $priorityString = '';
+            }
+
+            // custom log
+            $log = $data['log'] ?? false;
+            if ($log) {
+                $logString = ">> $dirpath/log/$log 2>&1 &";
             } else {
                 $logString = "> /dev/null 2>&1 &";
             }
 
-            $path = "/usr/bin/flock -n $dirpath/pid/$pid /usr/bin/php $dirpath/$command $logString";
+            $cmd = "/usr/bin/flock -n $dirpath/pid/$pid $priorityString /usr/bin/php $dirpath/$command $logString";
 
             # debug:start
-            Cli::Print_n("Cron: run $path");
+            Cli::Print_n(__CLASS__." run priority=$priority cmd=$cmd");
             # debug:end
 
-            exec($path);
+            // запуск
+            exec($cmd);
 
+            // задержка между стартами
             if ($delayUS) {
                 usleep($delayUS);
             }
