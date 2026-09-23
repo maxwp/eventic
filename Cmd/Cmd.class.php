@@ -4,6 +4,9 @@ class Cmd extends Pattern_ASingleton {
     public static function InitWorkers() {
         Cron::Get()->add(
             Cmd_Worker::class,
+            [],
+            false,
+            Cron_Priority_Const::PRIORITY_LOW,
         );
     }
 
