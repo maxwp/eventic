@@ -19,6 +19,8 @@ class SuperDebug extends EE_Content_Abstract_Cli {
         foreach ($superArray as $superID => $a) {
             $this->print_t($superID);
             $this->print_t($a['className']);
+            $this->print_t('ttl='.($a['ttl'] ?? 0));
+            $this->print_t('priority='.($a['po'] ?? 0));
             $this->print_n();
 
             $this->print_t(json_encode($a['argumentArray']));
