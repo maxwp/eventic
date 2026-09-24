@@ -32,6 +32,12 @@ class SuperVisor extends Pattern_ASingleton {
         # debug:end
     }
 
+    public function clear() {
+        $redis = Connection::GetRedis()->getLink();
+        $redis->del('supervisor');
+        $redis->del('supervisor:*');
+    }
+
     public function process() {
         $redis = Connection::GetRedis()->getLink();
 

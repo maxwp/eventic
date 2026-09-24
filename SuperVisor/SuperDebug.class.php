@@ -2,6 +2,14 @@
 class SuperDebug extends EE_Content_Abstract_Cli {
 
     public function process() {
+        // очистка всего супервизора
+        if ($this->getArgumentSecure('clear', EE_Typing::TYPE_BOOL)) {
+            SuperVisor::Get()->clear();
+
+            $this->print_n_success('SuperVisor fully cleared');
+            $this->print_n();
+        }
+
         $superArray = SuperVisor::Get()->getConfigArray();
 
         # debug:start
