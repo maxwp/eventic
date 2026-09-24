@@ -7,7 +7,6 @@ class SuperVisor extends Pattern_ASingleton {
         $data = [
             'className' => $className,
             'argumentArray' => $argumentArray,
-            'ttl' => $ttl,
             'priority' => $priority,
         ];
         $data = serialize($data);
@@ -47,7 +46,10 @@ class SuperVisor extends Pattern_ASingleton {
             // если есть данные - пробуем сделать unserialize
             if ($data) {
                 // сначала строим hash от всех данных процесса: если что-то поменяется - то процесс надо будет килять
+                // внутрь superHash входит class + argument + priority,
+                // то есть если поменяется class или argument или priority - то процесс надо будет килить
                 $superHash = md5($data);
+
                 $data = unserialize($data);
             }
 
@@ -105,6 +107,8 @@ class SuperVisor extends Pattern_ASingleton {
      * @throws Connection_Exception
      */
     public function getConfigArray() {
+        // @todo лучше сразу выдавать структуру
+
         $redis = Connection::GetRedis()->getLink();
         $a = $redis->sMembers('supervisor');
         $b = [];

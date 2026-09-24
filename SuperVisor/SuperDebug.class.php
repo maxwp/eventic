@@ -19,8 +19,22 @@ class SuperDebug extends EE_Content_Abstract_Cli {
         foreach ($superArray as $superID => $a) {
             $this->print_t($superID);
             $this->print_t($a['className']);
-            $this->print_t('ttl='.($a['ttl'] ?? 0));
-            $this->print_t('priority='.($a['po'] ?? 0));
+
+            $priority = $a['priority'];
+            if ($priority == Cron_Priority_Const::PRIORITY_HIGH) {
+                $this->printSGRStart(Cli::FG_RED_BRIGHT);
+                $this->print_t('priority=high');
+            } elseif ($priority == Cron_Priority_Const::PRIORITY_LOW) {
+                $this->printSGRStart(Cli::FG_GREEN_BRIGHT);
+                $this->print_t('priority=low');
+            } elseif ($priority == Cron_Priority_Const::PRIORITY_DEFAULT) {
+                $this->printSGRStart(Cli::FG_YELLOW_BRIGHT);
+                $this->print_t('priority=default');
+            } else {
+                $this->printSGRStart(Cli::BG_ORANGE);
+                $this->print_t('priority='.$priority);
+            }
+            $this->printSGREnd();
             $this->print_n();
 
             $this->print_t(json_encode($a['argumentArray']));
