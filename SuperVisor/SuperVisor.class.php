@@ -38,7 +38,7 @@ class SuperVisor extends Pattern_ASingleton {
         $redis = Connection::GetRedis()->getLink();
 
         $a = $redis->sMembers('supervisor');
-        $idArray = [];
+        $needArray = [];
         foreach ($a as $superID) {
             $data = $redis->get('supervisor:'.$superID);
 
@@ -59,7 +59,7 @@ class SuperVisor extends Pattern_ASingleton {
             // @todo Cron это скорее ProcessManager с разными списками?
 
             // список того что должно быть запущено: id + hash
-            $idArray[$superID][$superHash] = true;
+            $needArray[$superID][$superHash] = true;
 
             Cron::Get()->add(
                 SuperRun::class,
@@ -76,14 +76,18 @@ class SuperVisor extends Pattern_ASingleton {
         $a = [];
         exec("ps -eo pid=,cmd= | grep SuperRun | grep -v flock", $a);
         foreach ($a as $line) {
-            // @todo поменять на более правильный разбор через ProcessManager
-            if (preg_match("/^(\d+).+?SuperRun.+?superid=(\S+).+?superhash=(\S+)/", trim($line), $r)) {
+            // @todo поменять на более правильный разбор через ProcessManager,
+            //       а то я тут сильно доверяю порядку аргументов
+            if (preg_match("/^(\d+).+?SuperRun.+?superhash=(\S+).+?superid=(\S+)/", trim($line), $r)) {
                 //$pid = $r[1];
-                //$superID = $r[2];
-                //$superHash = $r[3];
+                //$superID = $r[3];
+                //$superHash = $r[2];
 
                 // нет такого superID + superHash - надо убивать процесс
-                if (empty($idArray[$r[2]][$r[3]])) {
+                if (empty($needArray[$r[3]][$r[2]])) {
+                    # debug:start
+                    Cli::Print_n(__CLASS__.' kill '.$r[3].' '.$r[2].' pid='.$r[1]);
+                    # debug:end
                     exec('kill '.$r[1]);
                 }
             }
@@ -123,9 +127,9 @@ class SuperVisor extends Pattern_ASingleton {
             throw new Exception(__CLASS__.": no className found for $superID");
         } elseif (!isset($data['argumentArray'])) {
             throw new Exception(__CLASS__.": no argumentArray found for $superID");
+        } else {
+            return $data;
         }
-
-        return $data;
     }
 
     public function __construct() {

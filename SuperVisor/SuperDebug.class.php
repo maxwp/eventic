@@ -16,8 +16,8 @@ class SuperDebug extends EE_Content_Abstract_Cli {
         $this->print_r($superArray);
         # debug:end
 
-        foreach ($superArray as $key => $a) {
-            $this->print_t($key);
+        foreach ($superArray as $superID => $a) {
+            $this->print_t($superID);
             $this->print_t($a['className']);
             $this->print_n();
 
