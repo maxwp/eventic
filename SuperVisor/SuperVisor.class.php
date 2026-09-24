@@ -1,7 +1,7 @@
 <?php
 class SuperVisor extends Pattern_ASingleton {
 
-    public function register($className, $argumentArray, $ttl = 300) {
+    public function register($superID, $className, $argumentArray, $ttl = 300) {
         $redis = Connection::GetRedis()->getLink();
 
         $data = [
@@ -9,10 +9,6 @@ class SuperVisor extends Pattern_ASingleton {
             'argumentArray' => $argumentArray,
         ];
         $data = serialize($data);
-
-        // автоматизированно строим superID: в нем теперь класс + аргументы.
-        // так надо делать, чтобы если поменяются аргументы - то я кильнул процесс тоже.
-        $superID = $className.':'.md5($data);
 
         $redis->sAdd('supervisor', $superID);
         $redis->set('supervisor:'.$superID, $data, $ttl);
@@ -48,6 +44,8 @@ class SuperVisor extends Pattern_ASingleton {
 
             // если есть данные - пробуем сделать unserialize
             if ($data) {
+                // сначала строим hash от всех данных процесса: если что-то поменяется - то процесс надо будет килять
+                $superHash = md5($data);
                 $data = unserialize($data);
             }
 
@@ -60,13 +58,14 @@ class SuperVisor extends Pattern_ASingleton {
             // @todo формирование команд надо сделать универсально
             // @todo Cron это скорее ProcessManager с разными списками?
 
-            // список того что должно быть запущено
-            $idArray[$superID] = $superID;
+            // список того что должно быть запущено: id + hash
+            $idArray[$superID][$superHash] = true;
 
             Cron::Get()->add(
                 SuperRun::class,
                 [
                     'superid' => $superID,
+                    'superhash' => $superHash, // hash of data
                     //'superport' => crc32($superID) % 5000 + 5003, // определяем superport который будет передан как аргумент @todo
                 ],
                 md5($superID) // pid
@@ -77,13 +76,15 @@ class SuperVisor extends Pattern_ASingleton {
         $a = [];
         exec("ps -eo pid=,cmd= | grep SuperRun | grep -v flock", $a);
         foreach ($a as $line) {
-            $line = trim($line);
-            if (preg_match("/^(\d+).+?SuperRun.+?superid=(\S+)/ius", $line, $r)) {
-                $pid = $r[1];
-                $superID = $r[2];
+            // @todo поменять на более правильный разбор через ProcessManager
+            if (preg_match("/^(\d+).+?SuperRun.+?superid=(\S+).+?superhash=(\S+)/", trim($line), $r)) {
+                //$pid = $r[1];
+                //$superID = $r[2];
+                //$superHash = $r[3];
 
-                if (empty($idArray[$superID])) {
-                    exec("kill $pid");
+                // нет такого superID + superHash - надо убивать процесс
+                if (empty($idArray[$r[2]][$r[3]])) {
+                    exec('kill '.$r[1]);
                 }
             }
         }

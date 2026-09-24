@@ -15,7 +15,7 @@ class SuperRun extends EE_Content_Abstract_Cli {
 
         // создаем объект
         // и ебашим в него аргументы
-        $result = EE::Get()->execute(
+        EE::Get()->execute(
             new EE_Call(
                 $className,
                 new EE_Request_Array($argumentArray)
