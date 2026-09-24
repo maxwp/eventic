@@ -33,7 +33,7 @@ class Cmd extends Pattern_ASingleton {
         # debug:end
     }
 
-    public function sendCommandSupervisor($serverIP, $superID, $className, $argumentArray = [], $ttl = 300) {
+    public function sendCommandSupervisor($serverIP, $superID, $className, $argumentArray = [], $ttl = 300, $priority = 0) {
         $this->sendCommand( // supervisor
             $serverIP,
             Cmd_SuperVisor::class,
@@ -42,6 +42,7 @@ class Cmd extends Pattern_ASingleton {
                 'cn' => $className,
                 'aa' => $argumentArray,
                 'ttl' => $ttl,
+                'po' => $priority,
             ],
         );
     }

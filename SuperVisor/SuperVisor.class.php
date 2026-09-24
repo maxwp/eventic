@@ -1,12 +1,14 @@
 <?php
 class SuperVisor extends Pattern_ASingleton {
 
-    public function register($superID, $className, $argumentArray, $ttl = 300) {
+    public function register($superID, $className, $argumentArray, $ttl = 300, $priority = 0) {
         $redis = Connection::GetRedis()->getLink();
 
         $data = [
             'className' => $className,
             'argumentArray' => $argumentArray,
+            'ttl' => $ttl,
+            'priority' => $priority,
         ];
         $data = serialize($data);
 
@@ -61,6 +63,9 @@ class SuperVisor extends Pattern_ASingleton {
             // список того что должно быть запущено: id + hash
             $needArray[$superID][$superHash] = true;
 
+            // определяем приоритет процесса
+            $superPriority = $data['priority'] ?? 0;
+
             Cron::Get()->add(
                 SuperRun::class,
                 [
@@ -68,7 +73,8 @@ class SuperVisor extends Pattern_ASingleton {
                     'superhash' => $superHash, // hash of data
                     //'superport' => crc32($superID) % 5000 + 5003, // определяем superport который будет передан как аргумент @todo
                 ],
-                md5($superID) // pid
+                md5($superID), // pid
+                $superPriority,
             );
         }
 

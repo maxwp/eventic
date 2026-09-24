@@ -6,7 +6,8 @@ class Cmd_SuperVisor implements EE_Content_Interface {
             $request->getArgument('id'), // superID
             $request->getArgument('cn'), // class name
             $request->getArgument('aa'), // argument array
-            $request->getArgument('ttl')
+            $request->getArgument('ttl'), // ttl
+            $request->getArgument('po'), // priority
         );
     }
 
