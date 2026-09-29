@@ -33,7 +33,7 @@ class Task extends Pattern_ASingleton {
                     }
                 } catch (Throwable $t) {
                     if ($notificationKey) {
-                        //_telegramSendLog("Task error: $notificationKey ".$t->getMessage());
+                        _telegramSendLog("Task error: $notificationKey ".$t->getMessage());
                     }
 
                     throw $t;
