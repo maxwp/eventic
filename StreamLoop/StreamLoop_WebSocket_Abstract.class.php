@@ -28,8 +28,9 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
         // state меняем после createAndConnectTCP, потому он может кинуть exception и всему пизда, а state будет connecting
         $this->_state = StreamLoop_TCP_Const::STATE_CONNECTING;
 
-        // на каждый connect новый период пинга
-        $this->_pingPeriod = 10.01 + rand() % 5;
+        // на каждый connect новый период пинга:
+        // плавно от 10.00 до 15.00 sec
+        $this->_pingPeriod = rand(1000, 1500) / 100;
     }
 
     public function disconnect() {
@@ -132,7 +133,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                             $fin = ($firstByte & 0x80) !== 0;
                             $opcode = $firstByte & 0x0F;
 
-                            if ($opcode == 0x1) {
+                            if ($opcode == 0x1) { // text
                                 # debug:start
                                 Cli::Print_n(__CLASS__.': received opcode='.$opcode.' '.$payload);
                                 # debug:end
@@ -144,7 +145,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                                     $this->_fragmentOpcode = $opcode;
                                     $this->_fragmentPayload = $payload;
                                 }
-                            } elseif ($opcode == 0x2) {
+                            } elseif ($opcode == 0x2) { // binary
                                 # debug:start
                                 Cli::Print_n(__CLASS__.': received opcode='.$opcode.' '.$payload);
                                 # debug:end
@@ -326,7 +327,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                 return;
             }
 
-            $this->_loop->updateStreamTimeout($this->streamID, $tsSelect + $this->_pingPeriod);
+            $this->_loop->updateStreamTimeout($this->streamID, $tsSelect + $this->_pingPeriod); // readyTimeout => next ping
         } else {
             // во всех остальных случаях я нарвался на проблему что за timeout я не смог установить соединение и сделать handshake/upgrade
             // (то есть не успел аж до ready)
