@@ -96,7 +96,7 @@ class SuperVisor extends Pattern_ASingleton {
                     # debug:start
                     Cli::Print_n(__CLASS__.' kill '.$r[3].' '.$r[2].' pid='.$r[1]);
                     # debug:end
-                    exec('kill '.$r[1]);
+                    posix_kill($r[1], SIGTERM);
                 }
             }
         }
