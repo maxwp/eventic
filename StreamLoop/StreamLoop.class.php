@@ -257,6 +257,13 @@ class StreamLoop {
         // массив timeout-ов тоже сортируем:
         // в случае если в один момент надо будет вызвать кучу таймеров, то чтобы всякие race/gc/sorts были в конце.
         uksort($this->_selectTimeoutToArray, $compare);
+
+        # debug:start
+        foreach ($this->_selectReadArray as $streamID => $x) {
+            Cli::Print_t($priorityArray[$streamID]);
+            Cli::Print_n(get_class($this->_handlerArray[$streamID]));
+        }
+        # debug:end
     }
 
     /**
