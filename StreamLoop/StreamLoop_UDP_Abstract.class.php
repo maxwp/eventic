@@ -72,7 +72,7 @@ abstract class StreamLoop_UDP_Abstract extends StreamLoop_Handler_Abstract {
 
         // редко бывают ситуации когда bytes === 0 - данных нет, но это валидно
         if ($bytes > 0) {
-            $this->_onReceive($tsSelect, $buffer, $bytes, $fromAddress);
+            $this->_onReceive($tsSelect, $buffer, $bytes);
         } else {
             $err = socket_last_error($this->_socketResource);
 

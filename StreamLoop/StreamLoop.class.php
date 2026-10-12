@@ -259,6 +259,7 @@ class StreamLoop {
         uksort($this->_selectTimeoutToArray, $compare);
 
         # debug:start
+        Cli::Print_n(__METHOD__);
         foreach ($this->_selectReadArray as $streamID => $x) {
             Cli::Print_t($priorityArray[$streamID]);
             Cli::Print_n(get_class($this->_handlerArray[$streamID]));
