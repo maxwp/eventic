@@ -9,7 +9,7 @@
  */
 abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
 
-    abstract protected function _onReceive($tsSelect, $payload, $opcode);
+    abstract protected function _onReceive($tsReceived, $payload, $opcode);
 
     protected function _updateUpgradeParams($path, $headerArray = [], $writeArray = []) {
         $this->_path = $path;
@@ -59,6 +59,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
             try {
                 for ($drainCounter = 1; $drainCounter <= 10; $drainCounter ++) {
                     $data = fread($this->stream, 16384);
+                    $tsReceived = microtime(true); // точное время сразу после чтения
                     $length = strlen($data); // O(1)
 
                     # debug:start
@@ -140,7 +141,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
 
                                 if ($fin) {
                                     $this->_active = true; // спец-костыль: если данные идут - похер на iframe ping-pong
-                                    $this->_onReceive($tsSelect, $payload, $opcode);
+                                    $this->_onReceive($tsReceived, $payload, $opcode); // text
                                 } else {
                                     $this->_fragmentOpcode = $opcode;
                                     $this->_fragmentPayload = $payload;
@@ -152,7 +153,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
 
                                 if ($fin) {
                                     $this->_active = true; // спец-костыль: если данные идут - похер на iframe ping-pong
-                                    $this->_onReceive($tsSelect, $payload, $opcode);
+                                    $this->_onReceive($tsReceived, $payload, $opcode); // binary
                                 } else {
                                     $this->_fragmentOpcode = $opcode;
                                     $this->_fragmentPayload = $payload;
@@ -170,7 +171,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
 
                                 if ($fin) {
                                     $this->_active = true; // спец-костыль: если данные идут - похер на iframe ping-pong
-                                    $this->_onReceive($tsSelect, $this->_fragmentPayload, $this->_fragmentOpcode);
+                                    $this->_onReceive($tsReceived, $this->_fragmentPayload, $this->_fragmentOpcode); // fragmented
                                     $this->_fragmentOpcode = -1;
                                     $this->_fragmentPayload = '';
                                 }

@@ -129,7 +129,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
                         $this->_reset();
 
                         // Затем пользователь может отправить следующий request.
-                        $this->_onReceive(
+                        $this->_onReceive( // ready read
                             $tsSelect,
                             $statusCode,
                             $statusMessage,
@@ -235,7 +235,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
                 // Сначала READY, затем пользовательский callback.
                 $this->_reset();
 
-                $this->_onReceive(
+                $this->_onReceive( // ready read
                     $tsSelect,
                     $statusCode,
                     $statusMessage,
@@ -312,7 +312,7 @@ abstract class StreamLoop_HTTP_Abstract extends StreamLoop_TCP_Abstract {
 
                             $this->_reset(); // chunked parser
 
-                            $this->_onReceive(
+                            $this->_onReceive( // ready read
                                 $tsSelect,
                                 $statusCode,
                                 $statusMessage,
