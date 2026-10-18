@@ -75,41 +75,35 @@ abstract class EE_Content_Abstract_Cli extends EE_Content_Abstract implements EE
 
     // @todo experimental cache, maybe move to other class or inherit in other layer
     protected function _cacheLoad($cacheFile) {
-        // cache - это попытка считать из кеша и сформировать его если его нет
-        $cache = $this->getArgumentSecure('cache', EE_Typing::TYPE_STRING);
+        // cache загружаем всегда, но если есть re-cache - то сбрасываем его
+        $recache = $this->getArgumentSecure('recache', EE_Typing::TYPE_BOOL);
 
         // если сказано строит новый cache - то не используем старый
-        if ($cache == 'new') {
+        if ($recache) {
             return false;
         }
 
-        if ($cache) {
-            try {
-                if (file_exists($cacheFile)) {
-                    return simdjson_decode(
-                        file_get_contents('compress.zlib://'.$cacheFile),
-                        true
-                    );
-                }
-            } catch (Exception) {
-
+        try {
+            if (file_exists($cacheFile)) {
+                return simdjson_decode(
+                    file_get_contents('compress.zlib://'.$cacheFile),
+                    true
+                );
             }
+        } catch (Exception) {
+
         }
 
         return false;
     }
 
     protected function _cacheSave($cacheFile, $data) {
-        // cache - это попытка считать из кеша и сформировать его если его нет
-        $cache = $this->getArgumentSecure('cache', EE_Typing::TYPE_STRING);
-
-        if ($cache) {
-            file_put_contents(
-                $cacheFile,
-                gzencode(json_encode($data)),
-                LOCK_EX
-            );
-        }
+        // cache сохраняем всегда
+        file_put_contents(
+            $cacheFile,
+            gzencode(json_encode($data)),
+            LOCK_EX
+        );
     }
 
 }
