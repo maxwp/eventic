@@ -85,7 +85,7 @@ abstract class EE_Content_Abstract_Cli extends EE_Content_Abstract implements EE
 
         try {
             if (file_exists($cacheFile)) {
-                return simdjson_decode(
+                return json_decode(
                     file_get_contents('compress.zlib://'.$cacheFile),
                     true
                 );

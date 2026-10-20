@@ -10,7 +10,7 @@ final class Cmd_Receiver implements Connection_Socket_IReceiver {
             Cli::Print_n(__CLASS__ . ": cmd=" . $message . " len=" . strlen($message));
             # debug:end
 
-            $json = simdjson_decode($message, true);
+            $json = json_decode($message, true);
 
             # debug:start
             Cli::Print_r($json);
