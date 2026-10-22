@@ -678,6 +678,53 @@ class Tool_Benchmark implements Benchmark_Interface {
 
 ==============================================================
 
+to locals vs call arguments
+
+Это очень интересный и сложный вывод:
+- вызов пустого метода занимает 8 ns
+- передача каждого аргумента - по 3 ns на аргумент
+- to locals занимает 4 ns, что дольше чем передача аргумента
+= поэтому, если в текущем методе тоже нужна будет эта переменная - то выгоднее сделать to locals, поюзать ее и передать в следующий call, чем заставлять следующий call там сделать to locals
+= но если она не будет нужна - то все равно прийдется сделать to locals где-то, и в этом случае уже лучше в следующем методе
+
+class Tool_Benchmark implements Benchmark_Interface {
+
+    public function process() {
+        //$x = rand(); // 11 ns
+        $x = $this->_a; // 4 ns
+
+        //$this->_call0(); // 19-11 = 8 ns
+        //$this->_call1($x); // 21-11 = 10
+        //$this->_call2($x, $x); // 24-11 = 13
+        //$this->_call3($x, $x, $x); // 27-11 = 16
+    }
+
+    protected function _call0() {
+
+    }
+
+    protected function _call1($x) {
+
+    }
+
+    protected function _call2($x, $y) {
+
+    }
+
+    protected function _call3($x, $y, $z) {
+
+    }
+
+    public function __construct() {
+        $this->_a = rand();
+    }
+
+    private $_a;
+
+}
+
+==============================================================
+
 to locals trick for array/object:
 
 1. вытащить объект - 7 ns
