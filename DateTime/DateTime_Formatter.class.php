@@ -196,22 +196,25 @@ class DateTime_Formatter {
         // @todo use consts from separate class (see Differ)
         if ($dateFrom == 'today') {
             $dateFrom = date('Y-m-d');
-            $dateTo = DateTime_Object::Create($dateFrom)->addDay(+1)->__toString();
+            $dateTo = DateTime_Object::FromString($dateFrom)->addDay(+1)->__toString();
         } elseif ($dateFrom == 'day') {
             $dateFrom = date('Y-m-d');
-            $dateTo = DateTime_Object::Create($dateFrom)->addDay(+1)->__toString();
+            $dateTo = DateTime_Object::FromString($dateFrom)->addDay(+1)->__toString();
+        } elseif ($dateFrom == 'prevday') {
+            $dateFrom = DateTime_Object::Create()->addDay(-1)->setFormat('Y-m-d')->__toString();
+            $dateTo = DateTime_Object::FromString($dateFrom)->addDay(+1)->__toString();
         } elseif ($dateFrom == 'week') {
             $dateFrom = DateTime_Object::Create()->addDay(-6)->__toString();
             $dateTo = DateTime_Object::Create()->__toString();
         } elseif ($dateFrom == 'month') {
             $dateFrom = date('Y-m-01');
-            $dateTo = DateTime_Object::Create($dateFrom)->addMonth(+1)->__toString();
+            $dateTo = DateTime_Object::FromString($dateFrom)->addMonth(+1)->__toString();
         } elseif ($dateFrom == 'month-1') {
             $dateFrom = date('Y-m-01');
             $dateTo = DateTime_Object::Create()->addDay(-1)->setFormat('Y-m-d')->__toString();
         } elseif ($dateFrom == 'year') {
             $dateFrom = date('Y-01-01');
-            $dateTo = DateTime_Object::Create($dateFrom)->addMonth(+12)->__toString();
+            $dateTo = DateTime_Object::FromString($dateFrom)->addMonth(+12)->__toString();
         } elseif (preg_match("/^(\d+)m$/ius", $dateFrom, $r)) {
             $dateFrom = DateTime_Object::Create()->addMinute(-$r[1])->__toString();
             $dateTo = DateTime_Object::Create()->addDay(+1)->__toString();
