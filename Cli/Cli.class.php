@@ -24,26 +24,59 @@ class Cli {
         echo "\n";
     }
 
-    public static function Print_title($title, $width = 120) {
-        Cli::Print_n();
-        Cli::Print_break('=', $width, '');
-
-        // $title может быть строкой, а может быть массивом строк.
-        // вычисляем для каждой строки длинну и принтим ее
-        if (!is_array($title)) {
-            $title = [$title];
+    public static function TerminalWidth() {
+        if (!stream_isatty(STDOUT)) {
+            return 80; // cron, перенаправление в файл, pipe
         }
 
-        foreach ($title as $t) {
-            $len = strlen($t);
-            // количество пробелов слева и справа
-            $left = floor(($width - $len) / 2);
-            $right = $width - $len - $left;
-            Cli::Print(sprintf("%' {$left}s%s%' {$right}s\n", "", $t, ""));
+        $size = trim((string) shell_exec('stty size 2>/dev/null'));
+
+        if (preg_match('/^\d+\s+(\d+)$/', $size, $matches)) {
+            return max(1, (int) $matches[1]);
         }
 
-        Cli::Print_break('=', $width, '');
-        Cli::Print_n();
+        return 120; // default
+    }
+
+    public static function Print_title($title) {
+        $width = max(4, (int) self::TerminalWidth());
+        $innerWidth = $width - 2;
+
+        $lines = [];
+
+        foreach ((array) $title as $text) {
+            foreach (preg_split('/\R/u', (string) $text) as $line) {
+                $lines[] = $line;
+            }
+        }
+
+        self::Print('╔' . str_repeat('═', $innerWidth) . '╗' . PHP_EOL);
+
+        foreach ($lines as $line) {
+            $line = mb_strimwidth(
+                $line,
+                0,
+                $innerWidth - 2,
+                '…',
+                'UTF-8'
+            );
+
+            $padding = $innerWidth - mb_strwidth($line, 'UTF-8');
+            $left = intdiv($padding, 2);
+            $right = $padding - $left;
+
+            self::Print(
+                '║'
+                . str_repeat(' ', $left)
+                . $line
+                . str_repeat(' ', $right)
+                . '║'
+                . PHP_EOL
+            );
+        }
+
+        self::Print('╚' . str_repeat('═', $innerWidth) . '╝' . PHP_EOL);
+        self::Print_n();
     }
 
     public static function Print_t($s = '') {

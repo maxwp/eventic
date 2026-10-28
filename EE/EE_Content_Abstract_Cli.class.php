@@ -31,8 +31,8 @@ abstract class EE_Content_Abstract_Cli extends EE_Content_Abstract implements EE
         Cli::Print_break($symbol, $length, $separator);
     }
 
-    public function print_title($title, $width = 120) {
-        Cli::Print_title($title, $width);
+    public function print_title($title) {
+        Cli::Print_title($title);
     }
 
     public function print_t($s = '') {
