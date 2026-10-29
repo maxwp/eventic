@@ -68,8 +68,7 @@ class Cli {
         $separator = str_repeat('═', $width);
 
         self::Print_n();
-        self::Print_n();
-        self::PrintSGRStart(self::BOLD_ON, self::FG_CYAN);
+        self::PrintSGRStart(self::BOLD_ON, self::FG_GREEN_BRIGHT);
         self::Print_n($separator);
 
         foreach ($args as $arg) {

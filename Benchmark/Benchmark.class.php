@@ -9,7 +9,7 @@ class Benchmark extends EE_Content_Abstract_Cli {
         }
         $simulateCold = $this->getArgumentSecure('cold', EE_Typing::TYPE_INT);
 
-        $this->print_title("Benchmark $className");
+        $this->print_title("Benchmark", $className);
 
         $stub = new Benchmark_Stub();
 
