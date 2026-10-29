@@ -1,6 +1,8 @@
 <?php
 class Cli {
 
+    // @todo надо делать не static, потому что terminal witdh один раз запрашивается
+
     public static function PrintSGRStart(...$args) {
         echo "\033[".implode(';', $args)."m";
     }
@@ -14,7 +16,7 @@ class Cli {
     }
 
     public static function Print_n($s = '') {
-        echo "$s\n";
+        echo $s.PHP_EOL;
     }
 
     public static function Print_break($symbol = '-', $length = 120, $separator = "\n") {
@@ -24,59 +26,120 @@ class Cli {
         echo "\n";
     }
 
+    /**
+     * Получить ширину терминала если это возможно
+     *
+     * @return int
+     */
     public static function TerminalWidth() {
-        if (!stream_isatty(STDOUT)) {
-            return 80; // cron, перенаправление в файл, pipe
-        }
+        if (self::IsTerminal()) {
+            if (function_exists('shell_exec')) {
+                $size = trim((string)shell_exec(
+                    'stty size 2>/dev/null < /dev/tty'
+                ));
 
-        $size = trim((string) shell_exec('stty size 2>/dev/null'));
+                if (preg_match('/^\d+\s+(\d+)$/', $size, $matches)) {
+                    $width = (int)$matches[1];
 
-        if (preg_match('/^\d+\s+(\d+)$/', $size, $matches)) {
-            return max(1, (int) $matches[1]);
-        }
-
-        return 120; // default
-    }
-
-    public static function Print_title($title) {
-        $width = max(4, (int) self::TerminalWidth());
-        $innerWidth = $width - 2;
-
-        $lines = [];
-
-        foreach ((array) $title as $text) {
-            foreach (preg_split('/\R/u', (string) $text) as $line) {
-                $lines[] = $line;
+                    if ($width > 0) {
+                        return $width;
+                    }
+                }
             }
         }
 
+        return 120;
+    }
+
+    private static function _TerminalWidthLimited() {
+        return max(80, (int) floor(self::TerminalWidth() * 0.8));
+    }
+
+    public static function IsTerminal() {
+        return stream_isatty(STDOUT);
+
+        /*$color = stream_isatty(STDOUT)
+            && getenv('NO_COLOR') === false
+            && getenv('TERM') !== 'dumb';*/
+    }
+
+    public static function Print_Title(...$args) {
+        $width = self::_TerminalWidthLimited();
+        $separator = str_repeat('═', $width);
+
         self::Print_n();
-        self::Print('╔' . str_repeat('═', $innerWidth) . '╗' . PHP_EOL);
+        self::Print_n();
+        self::PrintSGRStart(self::BOLD_ON, self::FG_CYAN);
+        self::Print_n($separator);
 
-        foreach ($lines as $line) {
-            $line = mb_strimwidth(
-                $line,
-                0,
-                $innerWidth - 2,
-                '…',
-                'UTF-8'
-            );
-
-            $padding = $innerWidth - mb_strwidth($line, 'UTF-8');
-            $left = intdiv($padding, 2);
-            $right = $padding - $left;
-
-            self::Print(
-                '║'
-                . str_repeat(' ', $left)
-                . $line
-                . str_repeat(' ', $right)
-                . '║'
-                . PHP_EOL
-            );
+        foreach ($args as $arg) {
+            foreach ((array) $arg as $text) {
+                foreach (preg_split('/\R/u', (string) $text) as $line) {
+                    self::Print_n('   ' . $line);
+                }
+            }
         }
 
-        self::Print('╚' . str_repeat('═', $innerWidth) . '╝' . PHP_EOL);
+        self::Print_n($separator);
+        self::PrintSGREnd();
+        self::Print_n();
+    }
+
+    public static function Print_Header1(...$args) {
+        $width = self::_TerminalWidthLimited();
+
+        self::Print_n();
+
+        $first = true;
+
+        self::PrintSGRStart(self::BOLD_ON);
+        foreach ($args as $arg) {
+            foreach ((array) $arg as $text) {
+                foreach (preg_split('/\R/u', (string) $text) as $line) {
+                    if ($first) {
+                        // «── » + название + пробел + оставшаяся линия.
+                        $remaining = max(
+                            0,
+                            $width - 4 - mb_strwidth($line, 'UTF-8')
+                        );
+
+                        self::Print_n(
+                            '── '
+                            . $line
+                            . ($remaining > 0
+                                ? ' ' . str_repeat('─', $remaining)
+                                : '')
+                        );
+
+                        $first = false;
+                    } else {
+                        self::Print_n('   ' . $line);
+                    }
+                }
+            }
+        }
+        self::PrintSGREnd();
+        self::Print_n();
+    }
+
+    public static function Print_Header2(...$args) {
+        self::Print_n();
+
+        $first = true;
+
+        foreach ($args as $arg) {
+            foreach ((array) $arg as $text) {
+                foreach (preg_split('/\R/u', (string) $text) as $line) {
+                    self::Print_n(
+                        ($first ? '-- ' : '   ')
+                        . $line
+                    );
+
+                    $first = false;
+                }
+            }
+        }
+
         self::Print_n();
     }
 
