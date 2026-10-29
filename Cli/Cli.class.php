@@ -50,6 +50,7 @@ class Cli {
             }
         }
 
+        self::Print_n();
         self::Print('╔' . str_repeat('═', $innerWidth) . '╗' . PHP_EOL);
 
         foreach ($lines as $line) {
