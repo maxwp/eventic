@@ -13,13 +13,13 @@ EE::Get()->execute($call);
 
 $tsFinish = microtime(true);
 
-print "\n\n";
-print "done:\n";
-print "pid      = ".getmypid()."\n";
-print "start    = ".date('Y-m-d H:i:s', $tsStart)." ($tsStart)\n";
-print "finish   = ".date('Y-m-d H:i:s', $tsFinish)." ($tsFinish)\n";
-print "duration = ".round($tsFinish - $tsStart)." sec.\n";
-print "mem peak = ".round(memory_get_peak_usage(true) / 1024 / 1024, 2)." mb.\n";
-print "\n";
+Cli::Print_Header2(
+    'ee:done',
+     "pid      = ".getmypid(),
+    "start    = ".date('Y-m-d H:i:s', $tsStart)." ($tsStart)",
+    "finish   = ".date('Y-m-d H:i:s', $tsFinish)." ($tsFinish)",
+    "duration = ".round($tsFinish - $tsStart)." sec",
+    "mem peak = ".round(memory_get_peak_usage(true) / 1024 / 1024)." mb",
+);
 
 exit(0);
