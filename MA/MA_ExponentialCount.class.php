@@ -1,12 +1,12 @@
 <?php
 /**
- * экспоненциальный счётчик: каждый вызов сразу добавляет 1, а между вызовами накопленное значение затухает
+ * экспоненциальный счётчик: каждый вызов сразу добавляет +N, а между вызовами накопленное значение затухает
  */
 class MA_ExponentialCount implements MA_Interface {
 
     public function __construct($tau) {
         if ($tau <= 0) {
-            throw new InvalidArgumentException('Horizon must be positive');
+            throw new InvalidArgumentException('tau must be positive');
         }
 
         $this->_tau = $tau;
@@ -16,9 +16,11 @@ class MA_ExponentialCount implements MA_Interface {
         if ($this->_ts !== null) {
             $dt = $ts - $this->_ts;
 
+            # debug:start
             if ($dt < 0) {
                 throw new LogicException('Time went backwards');
             }
+            # debug:end
 
             if ($dt > 0) {
                 $this->_count *= exp(-$dt / $this->_tau);
