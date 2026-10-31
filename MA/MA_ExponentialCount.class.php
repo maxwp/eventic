@@ -13,7 +13,7 @@ class MA_ExponentialCount implements MA_Interface {
     }
 
     private function _advance($ts) {
-        if ($this->_ts !== null) {
+        if ($this->_ts > 0) {
             $dt = $ts - $this->_ts;
 
             # debug:start
@@ -41,6 +41,6 @@ class MA_ExponentialCount implements MA_Interface {
     }
 
     private $_tau;
-    private $_ts = null;
+    private $_ts = 0.0;
     private $_count = 0.0;
 }
