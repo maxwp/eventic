@@ -42,6 +42,8 @@ class MA_DelayedValue implements MA_Interface {
         $this->_advance($ts);
 
         $this->_queue->enqueue([$ts, $value]);
+
+        return $this->_value;
     }
 
     public function get($ts) {

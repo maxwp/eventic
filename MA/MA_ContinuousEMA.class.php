@@ -52,6 +52,8 @@ class MA_ContinuousEMA implements MA_Interface {
 
         // новое значение НЕ двигает EMA мгновенно, просто запоминаю
         $this->_value = $value;
+
+        return $this->_ema;
     }
 
     /**

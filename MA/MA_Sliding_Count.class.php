@@ -47,6 +47,8 @@ class MA_Sliding_Count implements MA_Interface {
 
         $this->_queue->enqueue([$ts, $value]);
         $this->_count += $value;
+
+        return $this->_count;
     }
 
     /**

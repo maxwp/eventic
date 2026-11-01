@@ -24,6 +24,7 @@ class MA_PrevValue implements MA_Interface {
     public function update($ts, $value) {
         $this->_advance($ts); // дотягиваем до этой точки
         $this->_value = $value;
+        return $this->_ma;
     }
 
     public function get($ts) {

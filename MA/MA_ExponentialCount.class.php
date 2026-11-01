@@ -33,6 +33,7 @@ class MA_ExponentialCount implements MA_Interface {
     public function update($ts, $value = 1.0) {
         $this->_advance($ts);
         $this->_count += $value;
+        return $this->_count;
     }
 
     public function get($ts) {
