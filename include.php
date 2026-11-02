@@ -133,6 +133,7 @@ ClassLoader::Get()->registerClassArray([
     __DIR__.'/MA/MA_Sliding_Max.class.php',
     __DIR__.'/MA/MA_Sliding_Count.class.php',
     __DIR__.'/MA/MA_DelayedValue.class.php',
+    __DIR__.'/MA/MA_Exponential.class.php',
     __DIR__.'/MA/MA_ExponentialCount.class.php',
 
     __DIR__.'/Cron/Cron.class.php',
