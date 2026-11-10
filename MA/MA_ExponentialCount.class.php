@@ -16,10 +16,12 @@ class MA_ExponentialCount implements MA_Interface {
         if ($this->_ts > 0) {
             $dt = $ts - $this->_ts;
 
+            // тут может быть time walk, потому что я вызываю ее по tsEvent которые путаются,
+            // это не проблема -> ниже защита
             # debug:start
-            if ($dt < 0) {
-                throw new LogicException('Time went backwards');
-            }
+            /*if ($dt < 0) {
+                throw new Exception(__CLASS__." ts time walk: $ts < {$this->_ts}");
+            }*/
             # debug:end
 
             if ($dt > 0) {

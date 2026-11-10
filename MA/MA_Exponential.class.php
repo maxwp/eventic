@@ -26,7 +26,7 @@ class MA_Exponential implements MA_Interface {
     public function update($ts, $value) {
         # debug:start
         if ($ts < $this->_ts) {
-            throw new Exception(__CLASS__.' ts time walk');
+            throw new Exception(__CLASS__." ts time walk: $ts < {$this->_ts}");
         }
         # debug:end
 
