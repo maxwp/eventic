@@ -216,6 +216,7 @@ ClassLoader::Get()->registerClassArray([
 
     __DIR__.'/Task/Task.class.php',
     __DIR__.'/Task/Task_Create.class.php',
+    __DIR__.'/Task/Task_Read.class.php',
     __DIR__.'/Task/Task_Worker.class.php',
 ]);
 
