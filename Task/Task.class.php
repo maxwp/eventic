@@ -43,6 +43,12 @@ class Task extends Pattern_ASingleton {
             while ($data = $redis->brPop('task', 3600)) {
                 [$className, $argumentArray, $notificationKey] = json_decode($data[1], true);
 
+                # debug:start
+                Cli::Print_t($className);
+                Cli::Print_t(json_encode($argumentArray));
+                Cli::Print_n();
+                # debug:end
+
                 try {
                     EE::Get()->execute(new EE_Call($className, new EE_Request_Array($argumentArray)));
 
