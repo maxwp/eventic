@@ -18,6 +18,24 @@ class Task extends Pattern_ASingleton {
         );
     }
 
+    public function getTaskArray() {
+        $a = $this->_getRedis()->lRange('task', 0, -1);
+        $b = [];
+        foreach ($a as $x) {
+            [$className, $argumentArray, $notificationKey] = json_decode($x, true);
+            $b[] = [
+                'className' => $className,
+                'argumentArray' => $argumentArray,
+                'notificationKey' => $notificationKey,
+            ];
+        }
+        return $b;
+    }
+
+    public function clearTaskArray() {
+        $this->_getRedis()->del('task');
+    }
+
     public function process() {
         try {
             $redis = $this->_getRedis();

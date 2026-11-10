@@ -216,8 +216,8 @@ ClassLoader::Get()->registerClassArray([
 
     __DIR__.'/Task/Task.class.php',
     __DIR__.'/Task/Task_Create.class.php',
-    __DIR__.'/Task/Task_Read.class.php',
     __DIR__.'/Task/Task_Worker.class.php',
+    __DIR__.'/Task/Task_Cli.class.php',
 ]);
 
 /*ClassLoader::Get()->registerClass(__DIR__.'/MailQue/MailQue.class.php');
