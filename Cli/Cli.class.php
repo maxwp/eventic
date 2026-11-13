@@ -91,7 +91,7 @@ class Cli {
 
         $first = true;
 
-        self::PrintSGRStart(self::BOLD_ON);
+        self::PrintSGRStart(self::BOLD_ON, self::FG_GREEN_BRIGHT);
         foreach ($args as $arg) {
             foreach ((array) $arg as $text) {
                 foreach (preg_split('/\R/u', (string) $text) as $line) {
@@ -126,6 +126,7 @@ class Cli {
 
         $first = true;
 
+        self::PrintSGRStart(self::BOLD_ON, self::FG_GREEN_BRIGHT);
         foreach ($args as $arg) {
             foreach ((array) $arg as $text) {
                 foreach (preg_split('/\R/u', (string) $text) as $line) {
@@ -139,6 +140,7 @@ class Cli {
             }
         }
 
+        self::PrintSGREnd();
         self::Print_n();
     }
 
