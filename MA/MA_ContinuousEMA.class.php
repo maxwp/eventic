@@ -36,9 +36,11 @@ class MA_ContinuousEMA implements MA_Interface {
         # debug:end
 
         $dt = $ts - $this->_ts;
-        if ($dt > 0) { // один if проще чем куча математики
-            $this->_ema += (1.0 - exp(-$dt / $this->_tau)) * ($this->_value - $this->_ema);
+        if ($dt > 0) {
+            $decay = exp(-$dt / $this->_tau);
+            $this->_ema = $decay * $this->_ema + (1.0 - $decay) * $this->_value;
         }
+
 
         $this->_ts = $ts;
     }
