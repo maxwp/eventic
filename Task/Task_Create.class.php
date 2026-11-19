@@ -5,7 +5,10 @@ class Task_Create extends EE_Content_Abstract_Cli {
         $className = $this->getArgument('class', EE_Typing::TYPE_STRING);
 
         $argumentArray = $this->getArgumentArray();
-        unset($argumentArray['class']);
+        unset(
+            $argumentArray['class'],
+            $argumentArray['ee'],
+        );
         ksort($argumentArray);
 
         $a = [];
