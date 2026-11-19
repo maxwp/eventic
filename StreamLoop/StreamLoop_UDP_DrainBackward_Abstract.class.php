@@ -52,7 +52,7 @@ abstract class StreamLoop_UDP_DrainBackward_Abstract extends StreamLoop_UDP_Abst
 
         // drain up to limit:
         // start from 3 because we already have 2
-        $drainLimit = 8; // 10-2 fixed
+        $drainLimit = 30; // 30-2 fixed
 
         do {
             $bytes1 = socket_recvfrom(
