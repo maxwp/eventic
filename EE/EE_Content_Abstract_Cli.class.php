@@ -11,6 +11,10 @@
  */
 abstract class EE_Content_Abstract_Cli extends EE_Content_Abstract implements EE_Content_Interface {
 
+    public function printOffset($length, $s = ' ') {
+        Cli::PrintOffset($length, $s);
+    }
+
     public function printSGRStart(...$args) {
         Cli::PrintSGRStart(...$args);
     }

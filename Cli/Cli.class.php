@@ -3,6 +3,10 @@ class Cli {
 
     // @todo надо делать не static, потому что terminal witdh один раз запрашивается
 
+    public static function PrintOffset($length, $s = ' ') {
+        echo str_repeat($s, $length);
+    }
+
     public static function PrintSGRStart(...$args) {
         echo "\033[".implode(';', $args)."m";
     }
