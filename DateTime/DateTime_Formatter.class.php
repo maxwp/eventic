@@ -203,18 +203,10 @@ class DateTime_Formatter {
         } elseif ($dateFrom == 'prevday') {
             $dateFrom = DateTime_Object::Create()->addDay(-1)->setFormat('Y-m-d')->__toString();
             $dateTo = DateTime_Object::FromString($dateFrom)->addDay(+1)->__toString();
-        } elseif ($dateFrom == 'prev1d') {
-            // тоже самое что prevday
-            $dateFrom = DateTime_Object::Create()->addDay(-1)->setFormat('Y-m-d')->__toString();
-            $dateTo = DateTime_Object::FromString($dateFrom)->addDay(+1)->__toString();
-        } elseif ($dateFrom == 'prev2d') {
-            // prev two days
-            $dateFrom = DateTime_Object::Create()->addDay(-2)->setFormat('Y-m-d')->__toString();
-            $dateTo = DateTime_Object::FromString($dateFrom)->addDay(+2)->__toString();
-        } elseif ($dateFrom == 'prev3d') {
-            // prev three days
-            $dateFrom = DateTime_Object::Create()->addDay(-3)->setFormat('Y-m-d')->__toString();
-            $dateTo = DateTime_Object::FromString($dateFrom)->addDay(+3)->__toString();
+        } elseif (preg_match('/^prev(\d+)d$/', $dateFrom, $r)) {
+            // prevNd
+            $dateFrom = DateTime_Object::Create()->addDay(-$r[1])->setFormat('Y-m-d')->__toString();
+            $dateTo = DateTime_Object::FromString($dateFrom)->addDay(+$r[1])->__toString();
         } elseif ($dateFrom == 'week') {
             $dateFrom = DateTime_Object::Create()->addDay(-6)->__toString();
             $dateTo = DateTime_Object::Create()->__toString();
