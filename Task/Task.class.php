@@ -11,25 +11,45 @@ class Task extends Pattern_ASingleton {
     }
 
     public function addTask($className, $argumentArray, $notificationKey = false) {
-        // @todo set?
-        return $this->_getRedis()->lPush(
+        return $this->_getRedis()->sAdd(
             'task',
             json_encode([$className, $argumentArray, $notificationKey])
         );
     }
 
+    public function addTaskArray($taskArray) {
+        if (!$taskArray) {
+            return 0;
+        }
+
+        $a = [];
+        foreach ($taskArray as [$className, $argumentArray, $notificationKey]) {
+            $a[] = json_encode([$className, $argumentArray, $notificationKey]);
+        }
+
+        return $this->_getRedis()->sAdd(
+            'task',
+            ...$a
+        );
+    }
+
+    /**
+     * @return array
+     * @throws Connection_Exception
+     */
     public function getTaskArray() {
-        $a = $this->_getRedis()->lRange('task', 0, -1);
-        $b = [];
-        foreach ($a as $x) {
-            [$className, $argumentArray, $notificationKey] = json_decode($x, true);
-            $b[] = [
+        $a = [];
+        foreach ($this->_getRedis()->sMembers('task') as $data) {
+            [$className, $argumentArray, $notificationKey] = json_decode($data, true);
+
+            $a[] = [
                 'className' => $className,
                 'argumentArray' => $argumentArray,
                 'notificationKey' => $notificationKey,
             ];
         }
-        return $b;
+
+        return $a;
     }
 
     public function clearTaskArray() {
@@ -40,8 +60,16 @@ class Task extends Pattern_ASingleton {
         try {
             $redis = $this->_getRedis();
 
-            while ($data = $redis->brPop('task', 3600)) {
-                [$className, $argumentArray, $notificationKey] = json_decode($data[1], true);
+            while (true) {
+                $data = $redis->sPop('task');
+
+                if (!$data) {
+                    // Очередь пустая -> проверим через 5 секунд
+                    sleep(5);
+                    continue;
+                }
+
+                [$className, $argumentArray, $notificationKey] = json_decode($data, true);
 
                 # debug:start
                 Cli::Print_t($className);
@@ -50,20 +78,26 @@ class Task extends Pattern_ASingleton {
                 # debug:end
 
                 try {
-                    EE::Get()->execute(new EE_Call($className, new EE_Request_Array($argumentArray)));
+                    EE::Get()->execute(
+                        new EE_Call(
+                            $className,
+                            new EE_Request_Array($argumentArray)
+                        )
+                    );
 
-                    if ($notificationKey) {
-                        //_telegramSendLog("Task finished: $notificationKey");
-                    }
+                    /*if ($notificationKey) {
+                        _telegramSendLog("Task finished: $notificationKey");
+                    }*/
                 } catch (Throwable $t) {
+                    // @todo костыляка с зависимостью
                     if ($notificationKey) {
-                        _telegramSendLog("Task error: $notificationKey ".$t->getMessage());
+                        _telegramSendLog(
+                            "Task error: $notificationKey ".$t->getMessage()
+                        );
                     }
 
                     throw $t;
                 } finally {
-                    // cleanup
-                    unset($block);
                     gc_collect_cycles();
                 }
             }

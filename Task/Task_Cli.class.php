@@ -10,11 +10,7 @@ class Task_Cli extends EE_Content_Abstract_Cli {
             $line = rtrim($line);
 
             // выход
-            if ($line == 'q') {
-                break;
-            } elseif ($line == 'quit') {
-                break;
-            } elseif ($line == 'exit') {
+            if ($line == 'quit' || $line == 'exit' || $line == 'q') {
                 break;
             } elseif ($line == 'show') {
                 // показат все команды
