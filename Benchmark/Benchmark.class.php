@@ -11,94 +11,67 @@ class Benchmark extends EE_Content_Abstract_Cli {
 
         $this->print_title("Benchmark", $className);
 
-        $stub = new Benchmark_Stub();
+        $this->print_n("sim cnt = $simulateCount");
+        $this->print_n();
 
-        // сначала меряем пустой вызов и цикл
-        $tAvg = [];
-        for ($simulation = 1; $simulation <= 10; $simulation++) {
-            $t = hrtime(true);
-
-            for ($j = 1; $j <= $simulateCount; $j++) {
-                $stub->process();
-            }
-
-            $t = hrtime(true) - $t;
-            $tAvg[] = $t / $simulateCount;
-        }
-        $emptyCallHot = Array_Static::Avg($tAvg);
-
-        if ($simulateCold) {
-            $tAvg = [];
-            for ($simulation = 1; $simulation <= 10; $simulation++) {
-                $t = hrtime(true);
-
-                for ($j = 1; $j <= $simulateCount; $j++) {
-                    $stub->process();
-                    usleep($simulateCold);
-                }
-
-                $t = hrtime(true) - $t;
-                $tAvg[] = $t / $simulateCount;
-            }
-            $emptyCallCold = Array_Static::Avg($tAvg);
-        }
-
-        // затем меряем реальный вызов
-
+        $stubObject = new Benchmark_Stub();
         /**
          * @var Benchmark_Interface
          */
         $testObject = new $className();
 
-        $tHotAvg = [];
-        for ($simulation = 1; $simulation <= 10; $simulation++) {
+        // === HOT ===
+
+        // сначала меряем пустой вызов и цикл
+        $tAvg = [];
+        for ($j = 1; $j <= $simulateCount; $j++) {
             $t = hrtime(true);
+            $stubObject->process();
+            $tAvg[] = hrtime(true) - $t;
+        }
+        $emptyCallHot = Array_Static::Avg($tAvg);
 
+        $tHotAvg = [];
+        for ($j = 1; $j <= $simulateCount; $j++) {
+            $t = hrtime(true);
+            $testObject->process();
+            $tHotAvg[] = hrtime(true) - $t - $emptyCallHot;
+        }
+
+        $this->print_n("hot empty  = ".round($emptyCallHot)." ns/call");
+        $this->print_n("hot avg    = ".round(Array_Static::Avg($tHotAvg))." ns/call");
+        $this->print_n("hot med    = ".round(Array_Static::Med($tHotAvg))." ns/call");
+        $this->print_n("hot p95    = ".round(Array_Static::Quantile($tHotAvg, 95))." ns/call");
+        $this->print_n("hot p99    = ".round(Array_Static::Quantile($tHotAvg, 99))." ns/call");
+
+        $this->print_n();
+
+        // === COLD ===
+        if ($simulateCold) {
+            $tAvg = [];
             for ($j = 1; $j <= $simulateCount; $j++) {
-                $testObject->process();
-            }
+                usleep($simulateCold); // пауза ДО измерения
 
-            $t = hrtime(true) - $t;
-            $tx = $t / $simulateCount - $emptyCallHot;
-            $this->print_n(round($tx).' hot ns/call');
-            $tHotAvg[] = $tx;
-        }
-
-        $this->print_n();
-
-        if ($simulateCold) {
-            $tColdAvg = [];
-            for ($simulation = 1; $simulation <= 10; $simulation++) {
                 $t = hrtime(true);
-
-                for ($j = 1; $j <= $simulateCount; $j++) {
-                    $testObject->process();
-                    usleep($simulateCold);
-                }
-
-                $t = hrtime(true) - $t;
-                $tx = $t / $simulateCount - $emptyCallCold;
-                $this->print_n(round($tx) . ' cold ns/call');
-                $tColdAvg[] = $tx;
+                $stubObject->process();
+                $tAvg[] = hrtime(true) - $t;
             }
-        }
+            $emptyCallCold = Array_Static::Avg($tAvg);
 
-        $this->print_break();
-        //$this->print_n("empty       = ".round($emptyCallHot)." ns/call");
-        $this->print_n("sim cnt = $simulateCount");
+            $tColdAvg = [];
+            for ($j = 1; $j <= $simulateCount; $j++) {
+                usleep($simulateCold); // пауза ДО измерения
 
-        $this->print_n("hot  avg = ".round(Array_Static::Avg($tHotAvg))." ns/call");
-        $this->print_n("hot  med = ".round(Array_Static::Med($tHotAvg))." ns/call");
-        $this->print_n("hot  p95 = ".round(Array_Static::Quantile($tHotAvg, 95))." ns/call");
-        $this->print_n("hot  p99 = ".round(Array_Static::Quantile($tHotAvg, 99))." ns/call");
+                $t = hrtime(true);
+                $testObject->process();
+                $tColdAvg[] = hrtime(true) - $t - $emptyCallCold;
+            }
 
-        $this->print_n();
-
-        if ($simulateCold) {
-            $this->print_n("cold avg = " . round(Array_Static::Avg($tColdAvg)) . " ns/call");
-            $this->print_n("cold med = " . round(Array_Static::Med($tColdAvg)) . " ns/call");
-            $this->print_n("cold p95 = " . round(Array_Static::Quantile($tColdAvg, 95)) . " ns/call");
-            $this->print_n("cold p99 = " . round(Array_Static::Quantile($tColdAvg, 99)) . " ns/call");
+            $this->print_n("cold empty = " . round($emptyCallCold) . " ns/call");
+            $this->print_n("cold avg   = " . round(Array_Static::Avg($tColdAvg)) . " ns/call");
+            $this->print_n("cold med   = " . round(Array_Static::Med($tColdAvg)) . " ns/call");
+            $this->print_n("cold p95   = " . round(Array_Static::Quantile($tColdAvg, 95)) . " ns/call");
+            $this->print_n("cold p99   = " . round(Array_Static::Quantile($tColdAvg, 99)) . " ns/call");
         }
     }
 
