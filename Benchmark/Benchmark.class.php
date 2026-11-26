@@ -38,11 +38,11 @@ class Benchmark extends EE_Content_Abstract_Cli {
             $tHotAvg[] = hrtime(true) - $t - $emptyCallHot;
         }
 
-        $this->print_n("hot empty  = ".round($emptyCallHot)." ns/call");
         $this->print_n("hot avg    = ".round(Array_Static::Avg($tHotAvg))." ns/call");
         $this->print_n("hot med    = ".round(Array_Static::Med($tHotAvg))." ns/call");
         $this->print_n("hot p95    = ".round(Array_Static::Quantile($tHotAvg, 95))." ns/call");
         $this->print_n("hot p99    = ".round(Array_Static::Quantile($tHotAvg, 99))." ns/call");
+        $this->print_n("hot empty  = ".round($emptyCallHot)." ns/call");
 
         $this->print_n();
 
@@ -67,11 +67,11 @@ class Benchmark extends EE_Content_Abstract_Cli {
                 $tColdAvg[] = hrtime(true) - $t - $emptyCallCold;
             }
 
-            $this->print_n("cold empty = " . round($emptyCallCold) . " ns/call");
             $this->print_n("cold avg   = " . round(Array_Static::Avg($tColdAvg)) . " ns/call");
             $this->print_n("cold med   = " . round(Array_Static::Med($tColdAvg)) . " ns/call");
             $this->print_n("cold p95   = " . round(Array_Static::Quantile($tColdAvg, 95)) . " ns/call");
             $this->print_n("cold p99   = " . round(Array_Static::Quantile($tColdAvg, 99)) . " ns/call");
+            $this->print_n("cold empty = " . round($emptyCallCold) . " ns/call");
         }
     }
 
