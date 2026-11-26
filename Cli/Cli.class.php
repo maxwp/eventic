@@ -156,16 +156,16 @@ class Cli {
         print_r($a);
     }
 
-    public static function Print_f($s, $format, $eol = ' ', $color = false) {
-        if ($color) {
-            self::PrintSGRStart($color);
+    public static function Print_f($s, $format, $eol = ' ', $sgr = false) {
+        if ($sgr) {
+            self::PrintSGRStart($sgr);
         }
         if (str_contains($format, '%')) {
             echo sprintf($format, $s) . $eol;
         } else {
             echo sprintf('%1$' . $format, $s) . $eol;
         }
-        if ($color) {
+        if ($sgr) {
             self::PrintSGREnd();
         }
     }
