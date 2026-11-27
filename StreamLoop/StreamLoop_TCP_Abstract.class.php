@@ -42,6 +42,9 @@ abstract class StreamLoop_TCP_Abstract extends StreamLoop_Handler_Abstract {
 
             stream_set_blocking($stream, false);
 
+            // для TLS все равно прийдется ставить буфер
+            stream_set_chunk_size($stream, 16384);
+
             // отключаем буферизацию php
             stream_set_read_buffer($stream, 0);
             stream_set_write_buffer($stream, 0);
