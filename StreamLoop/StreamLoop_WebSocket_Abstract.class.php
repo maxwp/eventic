@@ -77,7 +77,7 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
 
                             // FAST PATH
                             // законченный TEXT-кадр, без маски, длина через 126
-                            if ($secondByte === 126) { // Маски нет, длина payload записана следующими двумя байтами
+                            if ($secondByte == 126) { // Маски нет, длина payload записана следующими двумя байтами
                                 if ($buffer[$offset] == "\x81") { // FIN=1, RSV=0, opcode — text
                                     // Для заголовка нужны 4 байта.
                                     if ($bufLen - $offset < 4) {
@@ -93,7 +93,6 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                                         break;
                                     }
 
-                                    $this->_active = true;
                                     $this->_onReceive( // fast path
                                         $tsReceived,
                                         substr(
@@ -103,6 +102,8 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                                         ),
                                         1
                                     );
+
+                                    $this->_active = true;
 
                                     // Сразу переходим к следующему кадру.
                                     $offset = $frameEnd;
@@ -176,7 +177,6 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                                 # debug:end
 
                                 if ($fin) {
-                                    $this->_active = true; // спец-костыль: если данные идут - похер на iframe ping-pong
                                     $this->_onReceive($tsReceived, $payload, $opcode); // text
                                 } else {
                                     $this->_fragmentOpcode = $opcode;
@@ -188,7 +188,6 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                                 # debug:end
 
                                 if ($fin) {
-                                    $this->_active = true; // спец-костыль: если данные идут - похер на iframe ping-pong
                                     $this->_onReceive($tsReceived, $payload, $opcode); // binary
                                 } else {
                                     $this->_fragmentOpcode = $opcode;
@@ -206,7 +205,6 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                                 $this->_fragmentPayload .= $payload;
 
                                 if ($fin) {
-                                    $this->_active = true; // спец-костыль: если данные идут - похер на iframe ping-pong
                                     $this->_onReceive($tsReceived, $this->_fragmentPayload, $this->_fragmentOpcode); // fragmented
                                     $this->_fragmentOpcode = -1;
                                     $this->_fragmentPayload = '';
@@ -215,24 +213,20 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                                 # debug:start
                                 Cli::Print_n(__CLASS__ . ": received frame-pong $payload");
                                 # debug:end
-
-                                // считаем что соединение активно и с ним все ок
-                                $this->_active = true;
                             } elseif ($opcode == 0x9) { // FRAME PING
                                 # debug:start
-                                Cli::Print_n(__CLASS__ . ": received frame-ping $payload");
+                                Cli::Print_n(__CLASS__ . ": received frame-ping & sent frame-pong $payload");
                                 # debug:end
 
                                 $this->write($payload, 0xA); // pong
-
-                                # debug:start
-                                Cli::Print_n(__CLASS__ . ": sent frame-pong $payload");
-                                # debug:end
                             } elseif ($opcode == 0x8) { // FRAME CLOSED
                                 throw new StreamLoop_Exception(StreamLoop_TCP_Const::ERROR_CLOSED);
                             } else {
                                 throw new StreamLoop_Exception(StreamLoop_WebSocket_Const::ERROR_UNKNOWN_OPCODE);
                             }
+
+                            // спец-костыль: если данные идут - похер на iframe ping-pong
+                            $this->_active = true;
 
                             // Сдвигаем указатель на следующий фрейм
                             $offset += $frameLength;
