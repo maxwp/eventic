@@ -74,6 +74,42 @@ abstract class StreamLoop_WebSocket_Abstract extends StreamLoop_TCP_Abstract {
                         // минимальный заголовок - 2 байта
                         while ($bufLen - $offset >= 2) {
                             $secondByte = ord($buffer[$offset + 1]);
+
+                            // FAST PATH
+                            // законченный TEXT-кадр, без маски, длина через 126
+                            if ($secondByte === 126) { // Маски нет, длина payload записана следующими двумя байтами
+                                if ($buffer[$offset] == "\x81") { // FIN=1, RSV=0, opcode — text
+                                    // Для заголовка нужны 4 байта.
+                                    if ($bufLen - $offset < 4) {
+                                        break;
+                                    }
+
+                                    $payloadLength = (ord($buffer[$offset + 2]) << 8) | ord($buffer[$offset + 3]);
+
+                                    $frameEnd = $offset + 4 + $payloadLength;
+
+                                    // кадр еще не дочитан
+                                    if ($frameEnd > $bufLen) {
+                                        break;
+                                    }
+
+                                    $this->_active = true;
+                                    $this->_onReceive( // fast path
+                                        $tsReceived,
+                                        substr(
+                                            $buffer,
+                                            $offset + 4,
+                                            $payloadLength
+                                        ),
+                                        1
+                                    );
+
+                                    // Сразу переходим к следующему кадру.
+                                    $offset = $frameEnd;
+                                    continue;
+                                }
+                            }
+
                             $lenFlag = $secondByte & 0x7F;
 
                             if ($lenFlag == 126) { // чаще всего срабатывает 126
